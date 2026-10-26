@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:go_router/go_router.dart';
+import 'package:petreminder_user/providers/notification_providers.dart';
 import 'package:petreminder_user/core/errors/auth_failure.dart';
 import 'package:petreminder_user/core/validators/input_validators.dart';
 import 'package:petreminder_user/models/feeding_record.dart';
@@ -96,13 +98,17 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 32),
                   Text(
-                    'Esta semana',
+                    'Últimos 7 días',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _StatsSummary(records: weeklyRecords),
+                  _StatsSummary(
+                    records: weeklyRecords.where((r) => !r.manual).toList(),
+                  ),
+                  const SizedBox(height: 12),
+                  _WeeklyProgress(records: weeklyRecords),
                   const SizedBox(height: 28),
                   Text(
                     'Por mascota',
@@ -125,6 +131,34 @@ class ProfileScreen extends ConsumerWidget {
                             .toList(),
                       ),
                   const SizedBox(height: 28),
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.diversity_1_outlined),
+                      title: const Text('Cuidado en familia'),
+                      subtitle: const Text(
+                        'Invitar, aceptar y cambiar de espacio',
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.push('/family'),
+                    ),
+                  ),
+                  Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.notifications_active_outlined),
+                      title: const Text('Notificaciones y sonido'),
+                      subtitle: const Text(
+                        'Permisos, ajustes y aviso de prueba',
+                      ),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => _notificationSettings(context, ref),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    'PetReminder · 1.0.0-beta.2',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
                   OutlinedButton.icon(
                     onPressed: isBusy
                         ? null
@@ -156,6 +190,77 @@ class ProfileScreen extends ConsumerWidget {
     }).toList();
   }
 
+  Future<void> _notificationSettings(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Tus recordatorios',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'Activa las notificaciones, el sonido del canal y las alarmas exactas. El modo silencio, No molestar y el ahorro de batería del teléfono pueden limitar los avisos.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () async {
+                  try {
+                    await ref.read(notificationServiceProvider).openSettings();
+                  } catch (_) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Abre Ajustes de Android → Aplicaciones → PetReminder → Notificaciones.',
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.settings_outlined),
+                label: const Text('Abrir ajustes de Android'),
+              ),
+              const SizedBox(height: 8),
+              FilledButton.icon(
+                onPressed: () async {
+                  try {
+                    await ref.read(notificationServiceProvider).sendTest();
+                  } catch (_) {
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'No se pudo enviar el aviso. Revisa los permisos en Android.',
+                          ),
+                        ),
+                      );
+                    }
+                  }
+                },
+                icon: const Icon(Icons.volume_up_outlined),
+                label: const Text('Probar notificación'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _editName(
     BuildContext context,
     WidgetRef ref,
@@ -178,6 +283,7 @@ class ProfileScreen extends ConsumerWidget {
               border: OutlineInputBorder(),
             ),
             validator: InputValidators.requiredName,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
           ),
         ),
         actions: [
@@ -373,11 +479,12 @@ class _StatValue extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
+        color: const Color(0xFFFFFEFC),
         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: SizedBox(
-        height: 112,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 112),
         child: Padding(
           padding: const EdgeInsets.all(10),
           child: Column(
@@ -393,8 +500,7 @@ class _StatValue extends StatelessWidget {
               ),
               Text(
                 label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.labelSmall,
               ),
             ],
@@ -419,6 +525,44 @@ class _PetStatsTile extends StatelessWidget {
       leading: const Icon(Icons.pets_rounded),
       title: Text(pet.name),
       subtitle: Text('$fed de ${records.length} alimentaciones realizadas'),
+    );
+  }
+}
+
+class _WeeklyProgress extends StatelessWidget {
+  const _WeeklyProgress({required this.records});
+  final List<FeedingRecord> records;
+  @override
+  Widget build(BuildContext context) {
+    final programmed = records.where((r) => !r.manual).toList();
+    final done = programmed.where((r) => r.isFed).length;
+    final percent = programmed.isEmpty ? 0.0 : done / programmed.length;
+    final manual = records.where((r) => r.manual).length;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          children: [
+            Text(
+              programmed.isEmpty
+                  ? 'Aún no hay comidas programadas esta semana'
+                  : '${(percent * 100).round()}% de comidas programadas realizadas',
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            LinearProgressIndicator(
+              value: percent,
+              minHeight: 10,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              '$manual comidas manuales adicionales registradas',
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

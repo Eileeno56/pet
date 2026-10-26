@@ -14,6 +14,9 @@ import {
   updateDoc,
   deleteDoc,
   serverTimestamp,
+  writeBatch,
+  query,
+  where,
 } from 'firebase/firestore';
 
 const projectId = 'demo-petreminder-tests';
@@ -44,6 +47,7 @@ const petData = {
 };
 
 try {
+  await environment.clearFirestore();
   await environment.withSecurityRulesDisabled(async (context) => {
     const db = context.firestore();
     await setDoc(doc(db, 'users/owner'), userData('owner'));
@@ -111,6 +115,64 @@ try {
   await deleteDoc(schedule);
   await assertFails(setDoc(doc(owner,'users/owner/feedingHistory/removed'),
     {...historyData,id:'removed'}));
+  // Nuevas validaciones y compatibilidad de documentos de la beta anterior.
+  await assertFails(updateDoc(doc(owner, 'users/owner'), {name:'Persona123'}));
+  await assertSucceeds(updateDoc(doc(owner, 'users/owner'), {name:'María José'}));
+  const newSchedule = doc(owner,'users/owner/pets/max/feedingSchedules/new');
+  const scheduleData = {id:'new',time:'12:30',active:true,createdAt:serverTimestamp(),
+    label:'Comida',foodType:'Croquetas',notes:'Revisar el agua',weekdays:[1,3,5]};
+  await assertSucceeds(setDoc(newSchedule,scheduleData));
+  await assertFails(updateDoc(newSchedule,{weekdays:[]}));
+  await assertFails(updateDoc(newSchedule,{weekdays:[1,1]}));
+  await assertFails(updateDoc(newSchedule,{weekdays:[0,8]}));
+  const plan = doc(owner,'users/owner/pets/max/carePlan/diet');
+  await assertSucceeds(setDoc(plan,{dailyGrams:150,weightKg:5,mealsPerDay:3,food:'Alimento',notes:''}));
+  await assertFails(updateDoc(plan,{dailyGrams:-1}));
+  await assertFails(updateDoc(plan,{mealsPerDay:0}));
+  const medicalData = {title:'Revisión anual',kind:'Consulta',date:new Date(),notes:'Registro de prueba',nextDate:null};
+  await assertSucceeds(setDoc(doc(owner,'users/owner/pets/max/medicalRecords/visit'),medicalData));
+  await assertFails(setDoc(doc(owner,'users/owner/pets/missing/medicalRecords/visit'),medicalData));
+  const manualData = {...historyData,id:'manual',scheduleId:'manual',manual:true,status:'fed',grams:50,
+    food:'Croquetas',fedAt:serverTimestamp()};
+  await assertSucceeds(setDoc(doc(owner,'users/owner/feedingHistory/manual'),manualData));
+  await assertFails(setDoc(doc(owner,'users/owner/feedingHistory/invalid-manual'),{...manualData,id:'invalid-manual',grams:-1}));
+  await assertFails(updateDoc(doc(owner,'users/owner/feedingHistory/manual'),{grams:999}));
+
+  // Cuidado compartido: una cuenta ajena no puede concederse acceso por sí sola.
+  const member = environment.authenticatedContext('other',{email:'other@example.com',email_verified:true}).firestore();
+  const unverified = environment.authenticatedContext('other',{email:'other@example.com',email_verified:false}).firestore();
+  const wrongEmail = environment.authenticatedContext('other',{email:'wrong@example.com',email_verified:true}).firestore();
+  const invite = doc(owner,'careInvitations/family');
+  const invitationData = {ownerId:'owner',ownerName:'María José',email:'other@example.com',status:'pending',acceptedBy:null,createdAt:serverTimestamp()};
+  await assertSucceeds(setDoc(invite,invitationData));
+  await assertSucceeds(getDocs(query(collection(owner,'careInvitations'),where('ownerId','==','owner'))));
+  await assertSucceeds(getDocs(query(collection(member,'careInvitations'),where('email','==','other@example.com'))));
+  await assertFails(getDocs(collection(member,'careInvitations')));
+  await assertFails(getDoc(doc(unverified,'careInvitations/family')));
+  await assertFails(getDoc(doc(wrongEmail,'careInvitations/family')));
+  await assertSucceeds(getDoc(doc(member,'careInvitations/family')));
+  await assertFails(setDoc(doc(member,'users/owner/caregivers/other'),{uid:'other',email:'other@example.com',invitationId:'family',createdAt:serverTimestamp()}));
+  await assertFails(getDoc(doc(member,'users/owner/pets/max')));
+  const accept = writeBatch(member);
+  accept.update(doc(member,'careInvitations/family'),{status:'accepted',acceptedBy:'other'});
+  accept.set(doc(member,'users/owner/caregivers/other'),{uid:'other',email:'other@example.com',invitationId:'family',createdAt:serverTimestamp()});
+  accept.set(doc(member,'users/other/careSpaces/owner'),{ownerId:'owner',ownerName:'María José',invitationId:'family'});
+  await assertSucceeds(accept.commit());
+  await assertSucceeds(getDoc(doc(member,'users/owner/pets/max')));
+  await assertSucceeds(getDocs(collection(member,'users/owner/pets')));
+  await assertSucceeds(getDocs(collection(member,'users/owner/feedingHistory')));
+  await assertSucceeds(updateDoc(doc(member,'users/owner/pets/max/carePlan/diet'),{dailyGrams:200}));
+  await assertSucceeds(setDoc(doc(member,'users/owner/pets/max/medicalRecords/family'),medicalData));
+  await assertSucceeds(updateDoc(doc(member,'users/owner/pets/max/feedingSchedules/new'),{time:'13:00'}));
+  await assertFails(getDoc(doc(member,'users/owner')));
+  await assertFails(updateDoc(doc(member,'users/owner'),{accountStatus:'disabled'}));
+  await assertFails(setDoc(doc(member,'users/owner/caregivers/intruder'),{uid:'intruder'}));
+  await assertFails(getDoc(doc(member,'users/disabled/pets/any')));
+  await assertSucceeds(updateDoc(invite,{status:'revoked'}));
+  await assertFails(getDoc(doc(member,'users/owner/pets/max')));
+  await assertFails(updateDoc(doc(member,'users/owner/pets/max/carePlan/diet'),{dailyGrams:300}));
+  await assertFails(setDoc(doc(member,'users/owner/caregivers/other'),{uid:'other',email:'other@example.com',invitationId:'family',createdAt:serverTimestamp()}));
+  await assertSucceeds(deleteDoc(doc(owner,'users/owner/caregivers/other')));
   await assertSucceeds(
     updateDoc(doc(admin, 'users/owner'), { accountStatus: 'disabled' }),
   );

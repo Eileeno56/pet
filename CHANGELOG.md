@@ -1,5 +1,20 @@
 # Historial de cambios
 
+## [1.0.0-beta.2] — 2026-10-26
+
+- Corrige la carga indefinida de autenticación y añade recuperación de sesión.
+- Mejora contraseñas nuevas, validación de nombres y mensajes de edad al escribir.
+- Centra información y estados vacíos; incorpora el fondo de corazones/patitas y superficies claras.
+- Añade horarios con nombre, alimento, notas y días; actualiza su recurrencia local.
+- Añade comidas manuales, cantidades, filtros del historial y porcentajes semanales.
+- Añade plan de alimento, peso, reparto de porciones y seguimiento de la meta diaria.
+- Añade ficha médica con registros editables y fechas de atención.
+- Añade invitaciones familiares dentro de la app con correo verificado y revocación de acceso.
+- Añade mensajes de sincronización, ajustes de notificaciones y aviso de prueba.
+- Mantiene compatibilidad con cuentas y documentos de la beta anterior.
+
+Consultar [alcance, funcionamiento y comprobaciones](docs/MEJORAS_BETA2.md).
+
 ## [1.0.0-beta.1] — 2026-10-20 (beta publicada)
 
 Primera línea base del código recibido; no representa una versión estable.

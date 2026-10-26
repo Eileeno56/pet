@@ -1,5 +1,10 @@
 # Pruebas beta — ronda beta-2026-10
 
+> Documento histórico de beta.1. La actualización del 26/10/2026 se describe en
+> [Mejoras beta.2](MEJORAS_BETA2.md). Los reportes actuales están en
+> [app_pet/opiniones](https://github.com/Eileeno56/app_pet/tree/main/opiniones);
+> su plazo fue el 25/10/2026. Las fechas y bloqueos de abajo corresponden a la ronda inicial.
+
 Objetivo: comprobar registro e inicio de sesión, recuperación de contraseña,
 mascotas, horarios de alimentación, recordatorios, historial y perfil en Android.
 Usar exclusivamente cuentas y datos de prueba. No compartir contraseñas,

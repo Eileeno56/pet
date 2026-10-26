@@ -1,9 +1,9 @@
+import 'package:petreminder_user/providers/care_space_providers.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:petreminder_user/core/errors/pet_failure.dart';
 import 'package:petreminder_user/models/pet.dart';
-import 'package:petreminder_user/providers/auth_providers.dart';
 import 'package:petreminder_user/providers/firebase_providers.dart';
 import 'package:petreminder_user/providers/notification_providers.dart';
 import 'package:petreminder_user/repositories/pet_repository.dart';
@@ -18,7 +18,7 @@ final petPhotoServiceProvider = Provider<PetPhotoService>(
 );
 
 final petsProvider = StreamProvider.autoDispose<List<Pet>>((ref) {
-  final userId = ref.watch(currentUserIdProvider);
+  final userId = ref.watch(careOwnerIdProvider);
   if (userId == null) {
     return Stream.value(const []);
   }
@@ -27,7 +27,7 @@ final petsProvider = StreamProvider.autoDispose<List<Pet>>((ref) {
 
 final petPhotoPathProvider = FutureProvider.autoDispose.family<String?, String>(
   (ref, petId) {
-    final userId = ref.watch(currentUserIdProvider);
+    final userId = ref.watch(careOwnerIdProvider);
     if (userId == null) {
       return Future.value(null);
     }
@@ -52,23 +52,32 @@ class PetController extends AsyncNotifier<void> {
     state = const AsyncLoading();
     try {
       final user = ref.read(firebaseAuthProvider).currentUser;
-      if (user == null) {
+      final ownerId = ref.read(careOwnerIdProvider);
+      if (user == null || ownerId == null) {
         throw const PetFailure('Debes iniciar sesión para agregar mascotas.');
       }
 
       final petId = await ref
           .read(petRepositoryProvider)
-          .createPet(user.uid, input);
+          .createPet(ownerId, input)
+          .timeout(const Duration(seconds: 15));
       if (photoPath != null) {
         await ref
             .read(petPhotoServiceProvider)
-            .savePhoto(userId: user.uid, petId: petId, sourcePath: photoPath);
+            .savePhoto(userId: ownerId, petId: petId, sourcePath: photoPath);
         ref.invalidate(petPhotoPathProvider(petId));
       }
       state = const AsyncData(null);
       return petId;
     } catch (error, stackTrace) {
-      state = AsyncError(error, stackTrace);
+      state = AsyncError(
+        error is TimeoutException
+            ? const PetFailure(
+                'No se confirmó el cambio. Revisa tu conexión y consulta tus mascotas antes de reintentar.',
+              )
+            : error,
+        stackTrace,
+      );
       return null;
     }
   }
@@ -82,17 +91,21 @@ class PetController extends AsyncNotifier<void> {
     state = const AsyncLoading();
     try {
       final user = ref.read(firebaseAuthProvider).currentUser;
-      if (user == null) {
+      final ownerId = ref.read(careOwnerIdProvider);
+      if (user == null || ownerId == null) {
         throw const PetFailure('Debes iniciar sesión para editar mascotas.');
       }
 
-      await ref.read(petRepositoryProvider).updatePet(user.uid, petId, input);
+      await ref
+          .read(petRepositoryProvider)
+          .updatePet(ownerId, petId, input)
+          .timeout(const Duration(seconds: 15));
       final photoService = ref.read(petPhotoServiceProvider);
       if (removePhoto) {
-        await photoService.deletePhoto(userId: user.uid, petId: petId);
+        await photoService.deletePhoto(userId: ownerId, petId: petId);
       } else if (photoPath != null) {
         await photoService.savePhoto(
-          userId: user.uid,
+          userId: ownerId,
           petId: petId,
           sourcePath: photoPath,
         );
@@ -101,7 +114,14 @@ class PetController extends AsyncNotifier<void> {
       state = const AsyncData(null);
       return true;
     } catch (error, stackTrace) {
-      state = AsyncError(error, stackTrace);
+      state = AsyncError(
+        error is TimeoutException
+            ? const PetFailure(
+                'No se confirmó el cambio. Revisa tu conexión y consulta tus mascotas antes de reintentar.',
+              )
+            : error,
+        stackTrace,
+      );
       return false;
     }
   }
@@ -110,19 +130,24 @@ class PetController extends AsyncNotifier<void> {
     state = const AsyncLoading();
     try {
       final user = ref.read(firebaseAuthProvider).currentUser;
-      if (user == null) {
+      final ownerId = ref.read(careOwnerIdProvider);
+      if (user == null || ownerId == null) {
         throw const PetFailure('Debes iniciar sesión para eliminar mascotas.');
       }
 
       final schedules = await ref
           .read(firestoreProvider)
           .collection('users')
-          .doc(user.uid)
+          .doc(ownerId)
           .collection('pets')
           .doc(petId)
           .collection('feedingSchedules')
-          .get();
-      await ref.read(petRepositoryProvider).deletePet(user.uid, petId);
+          .get()
+          .timeout(const Duration(seconds: 10));
+      await ref
+          .read(petRepositoryProvider)
+          .deletePet(ownerId, petId)
+          .timeout(const Duration(seconds: 20));
       final notifications = ref.read(notificationServiceProvider);
       for (final schedule in schedules.docs) {
         await notifications.cancelSchedule(
@@ -132,12 +157,19 @@ class PetController extends AsyncNotifier<void> {
       }
       await ref
           .read(petPhotoServiceProvider)
-          .deletePhoto(userId: user.uid, petId: petId);
+          .deletePhoto(userId: ownerId, petId: petId);
       ref.invalidate(petPhotoPathProvider(petId));
       state = const AsyncData(null);
       return true;
     } catch (error, stackTrace) {
-      state = AsyncError(error, stackTrace);
+      state = AsyncError(
+        error is TimeoutException
+            ? const PetFailure(
+                'No se confirmó el cambio. Revisa tu conexión y consulta tus mascotas antes de reintentar.',
+              )
+            : error,
+        stackTrace,
+      );
       return false;
     }
   }

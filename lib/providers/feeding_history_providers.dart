@@ -1,10 +1,11 @@
+import 'package:petreminder_user/providers/care_space_providers.dart';
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:petreminder_user/core/errors/feeding_history_failure.dart';
 import 'package:petreminder_user/models/feeding_record.dart';
+import 'package:petreminder_user/models/feeding_schedule.dart';
 import 'package:petreminder_user/models/pet.dart';
-import 'package:petreminder_user/providers/auth_providers.dart';
 import 'package:petreminder_user/providers/pet_providers.dart';
 import 'package:petreminder_user/providers/feeding_schedule_providers.dart';
 import 'package:petreminder_user/providers/firebase_providers.dart';
@@ -14,9 +15,27 @@ final feedingHistoryRepositoryProvider = Provider<FeedingHistoryRepository>(
   (ref) => FeedingHistoryRepository(ref.watch(firestoreProvider)),
 );
 
+final currentDateProvider = StreamProvider.autoDispose<String>((ref) {
+  final controller = StreamController<String>();
+  var date = FeedingRecord.dateKeyFor(DateTime.now());
+  controller.add(date);
+  final timer = Timer.periodic(const Duration(seconds: 30), (_) {
+    final next = FeedingRecord.dateKeyFor(DateTime.now());
+    if (next != date) {
+      date = next;
+      controller.add(next);
+    }
+  });
+  ref.onDispose(() {
+    timer.cancel();
+    controller.close();
+  });
+  return controller.stream;
+});
+
 final rawFeedingHistoryProvider =
     StreamProvider.autoDispose<List<FeedingRecord>>((ref) {
-      final userId = ref.watch(currentUserIdProvider);
+      final userId = ref.watch(careOwnerIdProvider);
       if (userId == null) {
         return Stream.value(const []);
       }
@@ -26,6 +45,7 @@ final rawFeedingHistoryProvider =
 // También excluye registros huérfanos generados por versiones anteriores.
 final feedingHistoryProvider =
     Provider.autoDispose<AsyncValue<List<FeedingRecord>>>((ref) {
+      ref.watch(currentDateProvider);
       final pets = ref.watch(petsProvider);
       return pets
           .whenData((items) {
@@ -47,14 +67,29 @@ final feedingHistoryProvider =
               }
               final ids = {
                 for (final entry in schedules.entries)
-                  entry.key: entry.value.value!.map((s) => s.id).toSet(),
+                  entry.key: {
+                    for (final schedule in entry.value.value!)
+                      schedule.id: schedule,
+                  },
               };
               return ref
                   .watch(rawFeedingHistoryProvider)
                   .whenData(
                     (records) => records
                         .where(
-                          (r) => ids[r.petId]?.contains(r.scheduleId) == true,
+                          (r) =>
+                              ids.containsKey(r.petId) &&
+                              (r.manual ||
+                                  (ids[r.petId]?.containsKey(r.scheduleId) ==
+                                          true &&
+                                      (r.isFed ||
+                                          r.dateKey !=
+                                              FeedingRecord.dateKeyFor(
+                                                DateTime.now(),
+                                              ) ||
+                                          (ids[r.petId]![r.scheduleId]
+                                                  as FeedingSchedule)
+                                              .occursOn(DateTime.now())))),
                         )
                         .toList(),
                   );
@@ -66,7 +101,7 @@ final ensureTodayForPetProvider = FutureProvider.autoDispose.family<void, Pet>((
   ref,
   pet,
 ) async {
-  final userId = ref.watch(currentUserIdProvider);
+  final userId = ref.watch(careOwnerIdProvider);
   if (userId == null) {
     return;
   }
@@ -78,13 +113,20 @@ final ensureTodayForPetProvider = FutureProvider.autoDispose.family<void, Pet>((
 final ensureTodayForAllPetsProvider = FutureProvider.autoDispose<void>((
   ref,
 ) async {
-  final userId = ref.watch(currentUserIdProvider);
+  ref.watch(currentDateProvider);
+  final userId = ref.watch(careOwnerIdProvider);
   if (userId == null) {
     return;
   }
+  final pets = ref.watch(petsProvider).value;
+  if (pets == null) return;
+  for (final pet in pets) {
+    ref.watch(feedingSchedulesProvider(pet.id));
+  }
   await ref
       .watch(feedingHistoryRepositoryProvider)
-      .ensureTodayForAllPets(userId);
+      .ensureTodayForAllPets(userId)
+      .timeout(const Duration(seconds: 15));
 });
 
 final feedingHistoryControllerProvider =
@@ -100,6 +142,8 @@ class FeedingHistoryController extends AsyncNotifier<void> {
     required Pet pet,
     required String scheduleId,
     required String scheduledTime,
+    double grams = 0,
+    String food = '',
   }) async {
     state = const AsyncLoading();
     try {
@@ -112,10 +156,12 @@ class FeedingHistoryController extends AsyncNotifier<void> {
       await ref
           .read(feedingHistoryRepositoryProvider)
           .markAsFed(
-            userId: user.uid,
+            userId: ref.read(careOwnerIdProvider)!,
             pet: pet,
             scheduleId: scheduleId,
             scheduledTime: scheduledTime,
+            grams: grams,
+            food: food,
           );
       state = const AsyncData(null);
       return true;

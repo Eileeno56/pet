@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:petreminder_user/core/errors/auth_failure.dart';
 import 'package:petreminder_user/models/app_user.dart';
+import 'package:petreminder_user/core/validators/input_validators.dart';
 
 class UserRepository {
   UserRepository(this._firestore);
@@ -79,10 +80,14 @@ class UserRepository {
   String _nameFor(User user) {
     final displayName = user.displayName?.trim() ?? '';
     final emailName = user.email?.split('@').first.trim() ?? '';
-    final name = displayName.length >= 2 ? displayName : emailName;
-    return name.length >= 2
-        ? name.substring(0, name.length.clamp(0, 60))
+    final candidate = (displayName.length >= 2 ? displayName : emailName)
+        .replaceAll(RegExp(r'[^A-Za-zÀ-ÖØ-öø-ÿĀ-ž ]'), '')
+        .replaceAll(RegExp(r' +'), ' ')
+        .trim();
+    final name = candidate.length >= 2
+        ? candidate.substring(0, candidate.length.clamp(0, 60)).trim()
         : 'Mi perfil';
+    return InputValidators.requiredName(name) == null ? name : 'Mi perfil';
   }
 
   Future<void> ensureAccountIsActive(User user) async {
@@ -103,11 +108,16 @@ class UserRepository {
   }
 
   Future<void> updateName(String userId, String name) async {
+    final error = InputValidators.requiredName(name);
+    if (error != null) throw AuthFailure(error);
     try {
-      await _users.doc(userId).update({
-        'name': name.trim(),
-        'lastActivity': FieldValue.serverTimestamp(),
-      });
+      await _users
+          .doc(userId)
+          .update({
+            'name': name.trim(),
+            'lastActivity': FieldValue.serverTimestamp(),
+          })
+          .timeout(const Duration(seconds: 15));
     } on FirebaseException catch (exception) {
       throw _firestoreFailure(exception);
     }

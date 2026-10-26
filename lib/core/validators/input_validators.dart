@@ -3,6 +3,14 @@ import 'package:petreminder_user/core/pets/pet_catalog.dart';
 
 abstract final class InputValidators {
   static final _emailPattern = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+  static final _namePattern = RegExp(
+    r'^[A-Za-zÀ-ÖØ-öø-ÿĀ-ž]+(?: [A-Za-zÀ-ÖØ-öø-ÿĀ-ž]+)*$',
+  );
+
+  static String? lettersInName(String value) =>
+      _namePattern.hasMatch(value.trim())
+      ? null
+      : 'Usa solo letras y espacios, sin números ni símbolos.';
 
   static String? requiredName(String? value) {
     if (value == null || value.trim().isEmpty) {
@@ -14,7 +22,7 @@ abstract final class InputValidators {
     if (value.trim().length > 60) {
       return 'Usa un nombre de hasta 60 caracteres.';
     }
-    return null;
+    return lettersInName(value);
   }
 
   static String? email(String? value) {
@@ -51,6 +59,32 @@ abstract final class InputValidators {
     return null;
   }
 
+  // La política nueva solo se aplica al registro. Las cuentas antiguas conservan acceso.
+  static String? newPassword(String? value) {
+    final basic = password(value);
+    if (basic != null) return basic;
+    if (value!.runes.length < 15) {
+      return 'Usa al menos 15 caracteres; puedes escribir una frase.';
+    }
+    final compact = value.replaceAll(RegExp(r'\s'), '');
+    if (compact.runes.length < 10 ||
+        RegExp(r'^(.)\1+$', dotAll: true).hasMatch(compact)) {
+      return 'Elige una frase con más contenido, sin rellenarla con espacios o caracteres repetidos.';
+    }
+    final normalized = value.toLowerCase().replaceAll(RegExp(r'[\s\W_]'), '');
+    if (RegExp(r'^(.)\1+$').hasMatch(normalized) ||
+        [
+          '123456789012345',
+          'passwordpassword',
+          'contraseñacontraseña',
+          'qwertyuiopasdfgh',
+          'petreminderpetreminder',
+        ].contains(normalized)) {
+      return 'Elige una frase menos común y difícil de adivinar.';
+    }
+    return null;
+  }
+
   static String? petName(String? value) {
     final name = value?.trim() ?? '';
     if (name.isEmpty) {
@@ -62,7 +96,7 @@ abstract final class InputValidators {
     if (name.length > 60) {
       return 'Usa un nombre de hasta 60 caracteres.';
     }
-    return null;
+    return lettersInName(name);
   }
 
   static String? petAge(

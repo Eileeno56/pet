@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:petreminder_user/core/errors/auth_failure.dart';
@@ -22,11 +23,24 @@ class AuthService {
   Future<UserCredential> signInWithEmail({
     required String email,
     required String password,
-  }) {
-    return _firebaseAuth.signInWithEmailAndPassword(
+  }) async {
+    var expired = false;
+    final pending = _firebaseAuth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
+    // Firebase no cancela solicitudes nativas: descartar también un éxito tardío.
+    unawaited(
+      pending.then<void>((_) async {
+        if (expired) await _firebaseAuth.signOut();
+      }, onError: (Object _, StackTrace _) {}),
+    );
+    try {
+      return await pending.timeout(const Duration(seconds: 15));
+    } on TimeoutException {
+      expired = true;
+      rethrow;
+    }
   }
 
   Future<UserCredential> signInWithGoogle() async {

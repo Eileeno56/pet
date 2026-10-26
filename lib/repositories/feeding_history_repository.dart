@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:petreminder_user/core/errors/feeding_history_failure.dart';
 import 'package:petreminder_user/models/feeding_record.dart';
 import 'package:petreminder_user/models/pet.dart';
+import 'package:petreminder_user/models/feeding_schedule.dart';
 
 class FeedingHistoryRepository {
   FeedingHistoryRepository(this._firestore);
@@ -38,6 +39,7 @@ class FeedingHistoryRepository {
       final now = DateTime.now();
       final dateKey = FeedingRecord.dateKeyFor(now);
       for (final schedule in schedules.docs) {
+        if (!FeedingSchedule.fromDocument(schedule).occursOn(now)) continue;
         final id = FeedingRecord.documentId(
           petId: pet.id,
           scheduleId: schedule.id,
@@ -52,7 +54,7 @@ class FeedingHistoryRepository {
           final existing = await transaction.get(reference);
           if (!currentPet.exists ||
               !currentSchedule.exists ||
-              currentSchedule.data()?['active'] != true) {
+              !FeedingSchedule.fromDocument(currentSchedule).occursOn(now)) {
             return;
           }
           final scheduledTime = currentSchedule.data()!['time'] as String;
@@ -102,7 +104,15 @@ class FeedingHistoryRepository {
     required Pet pet,
     required String scheduleId,
     required String scheduledTime,
+    double grams = 0,
+    String food = '',
   }) async {
+    if (!grams.isFinite ||
+        grams < 0 ||
+        grams > 10000 ||
+        food.trim().length > 80) {
+      throw const FeedingHistoryFailure('Revisa la cantidad y el alimento.');
+    }
     final now = DateTime.now();
     final dateKey = FeedingRecord.dateKeyFor(now);
     final id = FeedingRecord.documentId(
@@ -126,7 +136,7 @@ class FeedingHistoryRepository {
         final snapshot = await transaction.get(reference);
         if (!currentPet.exists ||
             !schedule.exists ||
-            schedule.data()?['active'] != true) {
+            !FeedingSchedule.fromDocument(schedule).occursOn(now)) {
           throw const FeedingHistoryFailure(
             'La mascota o el horario ya no están disponibles.',
           );
@@ -138,6 +148,8 @@ class FeedingHistoryRepository {
           transaction.update(reference, {
             'status': 'fed',
             'fedAt': FieldValue.serverTimestamp(),
+            'grams': grams,
+            'food': food.trim(),
           });
           return;
         }
@@ -152,6 +164,8 @@ class FeedingHistoryRepository {
           'status': 'fed',
           'fedAt': FieldValue.serverTimestamp(),
           'createdAt': FieldValue.serverTimestamp(),
+          'grams': grams,
+          'food': food.trim(),
         });
       });
     } on FirebaseException catch (exception) {
@@ -161,4 +175,49 @@ class FeedingHistoryRepository {
 
   CollectionReference<Map<String, dynamic>> _history(String userId) =>
       _firestore.collection('users').doc(userId).collection('feedingHistory');
+
+  Future<void> addManual({
+    required String userId,
+    required Pet pet,
+    required double grams,
+    required String food,
+  }) async {
+    if (!grams.isFinite ||
+        grams <= 0 ||
+        grams > 10000 ||
+        food.trim().length > 80) {
+      throw const FeedingHistoryFailure(
+        'Escribe una cantidad entre 0 y 10000 gramos.',
+      );
+    }
+    final reference = _history(userId).doc();
+    final now = DateTime.now();
+    final petRef = _firestore.doc('users/$userId/pets/${pet.id}');
+    await _firestore
+        .runTransaction((tx) async {
+          final snapshot = await tx.get(petRef);
+          if (!snapshot.exists) {
+            throw const FeedingHistoryFailure(
+              'La mascota ya no está disponible.',
+            );
+          }
+          tx.set(reference, {
+            'id': reference.id,
+            'userId': userId,
+            'petId': pet.id,
+            'petName': snapshot.data()!['name'],
+            'scheduleId': 'manual',
+            'scheduledTime':
+                '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}',
+            'dateKey': FeedingRecord.dateKeyFor(now),
+            'status': 'fed',
+            'manual': true,
+            'grams': grams,
+            'food': food.trim(),
+            'fedAt': FieldValue.serverTimestamp(),
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+        })
+        .timeout(const Duration(seconds: 15));
+  }
 }

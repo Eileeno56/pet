@@ -14,6 +14,9 @@ class FeedingRecord {
     required this.status,
     required this.fedAt,
     required this.createdAt,
+    this.manual = false,
+    this.grams = 0,
+    this.food = '',
   });
 
   final String id;
@@ -26,6 +29,9 @@ class FeedingRecord {
   final FeedingStatus status;
   final DateTime? fedAt;
   final DateTime createdAt;
+  final bool manual;
+  final double grams;
+  final String food;
 
   bool get isFed => status == FeedingStatus.fed;
 
@@ -38,6 +44,9 @@ class FeedingRecord {
 
     return FeedingRecord(
       id: document.id,
+      manual: data['manual'] == true,
+      grams: (data['grams'] as num?)?.toDouble() ?? 0,
+      food: data['food'] as String? ?? '',
       userId: data['userId'] as String? ?? '',
       petId: data['petId'] as String? ?? '',
       petName: data['petName'] as String? ?? '',

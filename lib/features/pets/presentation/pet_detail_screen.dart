@@ -1,4 +1,7 @@
 import 'dart:io';
+import 'package:petreminder_user/features/pets/presentation/pet_care_screen.dart';
+import 'package:petreminder_user/providers/pet_care_providers.dart';
+import 'package:petreminder_user/features/pets/presentation/schedule_editor.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,10 +28,12 @@ class PetDetailScreen extends ConsumerWidget {
     if (pets.hasValue && !pets.isLoading && current == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Mascota no disponible')),
-        body: Center(child: FilledButton(
-          onPressed: () => context.go(AppRoutes.home),
-          child: const Text('Volver al inicio'),
-        )),
+        body: Center(
+          child: FilledButton(
+            onPressed: () => context.go(AppRoutes.home),
+            child: const Text('Volver al inicio'),
+          ),
+        ),
       );
     }
     return _PetDetailView(pet: current ?? pet);
@@ -43,6 +48,7 @@ class _PetDetailView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final schedules = ref.watch(feedingSchedulesProvider(pet.id));
+    ref.watch(carePlanProvider(pet.id));
     final scheduleOperation = ref.watch(feedingScheduleControllerProvider);
     final historyOperation = ref.watch(feedingHistoryControllerProvider);
     final history = ref.watch(feedingHistoryProvider);
@@ -102,7 +108,31 @@ class _PetDetailView extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
               children: [
-                _PetSummary(pet: pet, photoPath: photoPath),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(18),
+                    child: _PetSummary(pet: pet, photoPath: photoPath),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.favorite_outline),
+                    title: const Text('Alimento y ficha médica'),
+                    subtitle: const Text('Meta diaria, porciones y cuidados'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () =>
+                        context.push('/pets/${pet.id}/care', extra: pet),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                OutlinedButton.icon(
+                  onPressed: isBusy
+                      ? null
+                      : () => showMealDialog(context, ref, pet),
+                  icon: const Icon(Icons.add_task),
+                  label: const Text('Registrar comida manual'),
+                ),
                 const SizedBox(height: 28),
                 Row(
                   children: [
@@ -158,16 +188,12 @@ class _PetDetailView extends ConsumerWidget {
                                   ),
                                   onDelete: () =>
                                       _deleteSchedule(context, ref, schedule),
-                                  onFed: () => ref
-                                      .read(
-                                        feedingHistoryControllerProvider
-                                            .notifier,
-                                      )
-                                      .markAsFed(
-                                        pet: pet,
-                                        scheduleId: schedule.id,
-                                        scheduledTime: schedule.time,
-                                      ),
+                                  onFed: () => showMealDialog(
+                                    context,
+                                    ref,
+                                    pet,
+                                    schedule: schedule,
+                                  ),
                                 ),
                               ),
                           ],
@@ -193,24 +219,25 @@ class _PetDetailView extends ConsumerWidget {
     WidgetRef ref,
     List<FeedingSchedule> schedules,
   ) async {
-    final selected = await showTimePicker(
+    final draft = await showDialog<ScheduleDraft>(
       context: context,
-      initialTime: TimeOfDay.now(),
-      helpText: 'Selecciona la hora de comida',
-      cancelText: 'Cancelar',
-      confirmText: 'Agregar',
+      builder: (_) => const ScheduleEditor(),
     );
-    if (selected == null || !context.mounted) {
-      return;
-    }
-    final time = _timeValue(selected);
-    if (_hasDuplicate(schedules, time)) {
+    if (draft == null || !context.mounted) return;
+    if (_hasDuplicate(schedules, draft.time, days: draft.weekdays)) {
       _showDuplicateMessage(context);
       return;
     }
     final created = await ref
         .read(feedingScheduleControllerProvider.notifier)
-        .create(pet: pet, time: time);
+        .create(
+          pet: pet,
+          time: draft.time,
+          label: draft.label,
+          foodType: draft.foodType,
+          notes: draft.notes,
+          weekdays: draft.weekdays,
+        );
     if (created) {
       ref.invalidate(ensureTodayForPetProvider(pet));
     }
@@ -222,28 +249,31 @@ class _PetDetailView extends ConsumerWidget {
     FeedingSchedule schedule,
     List<FeedingSchedule> schedules,
   ) async {
-    final parts = schedule.time.split(':');
-    final selected = await showTimePicker(
+    final draft = await showDialog<ScheduleDraft>(
       context: context,
-      initialTime: TimeOfDay(
-        hour: int.parse(parts[0]),
-        minute: int.parse(parts[1]),
-      ),
-      helpText: 'Modifica la hora de comida',
-      cancelText: 'Cancelar',
-      confirmText: 'Guardar',
+      builder: (_) => ScheduleEditor(schedule: schedule),
     );
-    if (selected == null || !context.mounted) {
-      return;
-    }
-    final time = _timeValue(selected);
-    if (_hasDuplicate(schedules, time, exceptId: schedule.id)) {
+    if (draft == null || !context.mounted) return;
+    if (_hasDuplicate(
+      schedules,
+      draft.time,
+      exceptId: schedule.id,
+      days: draft.weekdays,
+    )) {
       _showDuplicateMessage(context);
       return;
     }
     final updated = await ref
         .read(feedingScheduleControllerProvider.notifier)
-        .updateTime(pet: pet, schedule: schedule, time: time);
+        .updateTime(
+          pet: pet,
+          schedule: schedule,
+          time: draft.time,
+          label: draft.label,
+          foodType: draft.foodType,
+          notes: draft.notes,
+          weekdays: draft.weekdays,
+        );
     if (updated) {
       ref.invalidate(ensureTodayForPetProvider(pet));
     }
@@ -292,16 +322,16 @@ class _PetDetailView extends ConsumerWidget {
         .delete(petId: pet.id, scheduleId: schedule.id);
   }
 
-  String _timeValue(TimeOfDay time) =>
-      '${time.hour.toString().padLeft(2, '0')}:'
-      '${time.minute.toString().padLeft(2, '0')}';
-
   bool _hasDuplicate(
     List<FeedingSchedule> schedules,
     String time, {
     String? exceptId,
+    List<int> days = const [1, 2, 3, 4, 5, 6, 7],
   }) => schedules.any(
-    (schedule) => schedule.id != exceptId && schedule.time == time,
+    (schedule) =>
+        schedule.id != exceptId &&
+        schedule.time == time &&
+        schedule.weekdays.any(days.contains),
   );
 
   void _showDuplicateMessage(BuildContext context) {
@@ -394,6 +424,7 @@ class _ScheduleTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return DecoratedBox(
       decoration: BoxDecoration(
+        color: const Color(0xFFFFFEFC),
         border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -406,37 +437,39 @@ class _ScheduleTile extends StatelessWidget {
                   : Icons.alarm_off_outlined,
             ),
             title: Text(
-              schedule.time,
+              '${schedule.time} · ${schedule.displayLabel}',
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
-            subtitle: Text(_statusLabel),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Switch(
-                  value: schedule.active,
-                  onChanged: disabled ? null : onToggle,
-                ),
-                IconButton(
-                  tooltip: 'Editar horario',
-                  onPressed: disabled ? null : onEdit,
-                  icon: const Icon(Icons.edit_outlined),
-                ),
-                IconButton(
-                  tooltip: 'Eliminar horario',
-                  onPressed: disabled ? null : onDelete,
-                  icon: const Icon(Icons.delete_outline_rounded),
-                ),
-              ],
+            subtitle: Text(
+              '${schedule.foodType} · ${schedule.frequencyLabel}\n$_statusLabel${schedule.notes.isEmpty ? "" : "\n${schedule.notes}"}',
             ),
           ),
-          if (schedule.active && record?.isFed != true)
+          Wrap(
+            alignment: WrapAlignment.center,
+            children: [
+              Switch(
+                value: schedule.active,
+                onChanged: disabled ? null : onToggle,
+              ),
+              IconButton(
+                tooltip: 'Editar horario',
+                onPressed: disabled ? null : onEdit,
+                icon: const Icon(Icons.edit_outlined),
+              ),
+              IconButton(
+                tooltip: 'Eliminar horario',
+                onPressed: disabled ? null : onDelete,
+                icon: const Icon(Icons.delete_outline_rounded),
+              ),
+            ],
+          ),
+          if (schedule.occursOn(DateTime.now()) && record?.isFed != true)
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Align(
-                alignment: Alignment.centerRight,
+                alignment: Alignment.center,
                 child: FilledButton.icon(
                   onPressed: disabled ? null : onFed,
                   icon: const Icon(Icons.check_rounded),
@@ -453,6 +486,7 @@ class _ScheduleTile extends StatelessWidget {
     if (!schedule.active) {
       return 'Desactivado';
     }
+    if (!schedule.occursOn(DateTime.now())) return 'No corresponde hoy';
     return record?.isFed == true ? 'Alimentada' : 'Pendiente';
   }
 }
@@ -470,7 +504,10 @@ class _EmptySchedules extends StatelessWidget {
         children: [
           const Icon(Icons.schedule_outlined, size: 48),
           const SizedBox(height: 12),
-          const Text('Esta mascota todavía no tiene horarios.'),
+          const Text(
+            'Esta mascota todavía no tiene horarios.',
+            textAlign: TextAlign.center,
+          ),
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: onAdd,

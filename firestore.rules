@@ -12,6 +12,19 @@ service cloud.firestore {
           .data.accountStatus == 'active';
     }
 
+    function isActiveCare(userId) {
+      return isActiveOwner(userId) || (request.auth != null
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.accountStatus == 'active'
+        && get(/databases/$(database)/documents/users/$(userId)).data.accountStatus == 'active'
+        && exists(/databases/$(database)/documents/users/$(userId)/caregivers/$(request.auth.uid))
+        && get(/databases/$(database)/documents/careInvitations/$(get(/databases/$(database)/documents/users/$(userId)/caregivers/$(request.auth.uid)).data.invitationId)).data.status == 'accepted');
+    }
+
+    function validName(name) {
+      return name is string && name.size() >= 2 && name.size() <= 60
+        && name.matches('^[A-Za-zÀ-ÖØ-öø-ÿĀ-ž]+( [A-Za-zÀ-ÖØ-öø-ÿĀ-ž]+)*$');
+    }
+
     function isAdmin() {
       return request.auth != null
         && request.auth.token.keys().hasAny(['admin'])
@@ -92,11 +105,20 @@ service cloud.firestore {
     }
 
     function hasValidScheduleData(data, scheduleId) {
-      return data.keys().hasOnly(['id', 'time', 'active', 'createdAt'])
+      return data.keys().hasOnly(['id', 'time', 'active', 'createdAt', 'label', 'foodType', 'notes', 'weekdays'])
         && data.id == scheduleId
         && data.time is string
         && data.time.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
         && data.active is bool
+        && data.get('label', '') is string && data.get('label', '').size() <= 40
+        && data.get('foodType', 'Alimento') is string && data.get('foodType', 'Alimento').size() >= 1
+        && data.get('foodType', 'Alimento').size() <= 60
+        && data.get('notes', '') is string && data.get('notes', '').size() <= 300
+        && data.get('weekdays', [1,2,3,4,5,6,7]) is list
+        && data.get('weekdays', [1,2,3,4,5,6,7]).size() >= 1
+        && data.get('weekdays', [1,2,3,4,5,6,7]).size() <= 7
+        && data.get('weekdays', [1,2,3,4,5,6,7]).hasOnly([1,2,3,4,5,6,7])
+        && data.get('weekdays', [1,2,3,4,5,6,7]).toSet().size() == data.get('weekdays', [1,2,3,4,5,6,7]).size()
         && data.createdAt is timestamp;
     }
 
@@ -111,6 +133,7 @@ service cloud.firestore {
           'dateKey',
           'status',
           'fedAt',
+          'manual', 'grams', 'food',
           'createdAt'
         ])
         && data.id == historyId
@@ -124,6 +147,10 @@ service cloud.firestore {
         && data.scheduledTime.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
         && data.dateKey is string
         && data.dateKey.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && data.get('manual', false) is bool
+        && data.get('grams', 0) is number && data.get('grams', 0) >= 0 && data.get('grams', 0) <= 10000
+        && data.get('food', '') is string && data.get('food', '').size() <= 80
+        && (!data.get('manual', false) || (data.scheduleId == 'manual' && data.status == 'fed' && data.grams > 0))
         && data.status in ['pending', 'fed']
         && (data.fedAt == null || data.fedAt is timestamp)
         && data.createdAt is timestamp;
@@ -134,6 +161,7 @@ service cloud.firestore {
         && hasValidUserData(request.resource.data, userId)
         && request.resource.data.email == request.auth.token.email
         && request.resource.data.accountStatus == 'active'
+        && validName(request.resource.data.name)
         && request.resource.data.createdAt == request.time
         && request.resource.data.lastActivity == request.time;
 
@@ -143,6 +171,7 @@ service cloud.firestore {
         && request.resource.data.uid == resource.data.uid
         && request.resource.data.email == resource.data.email
         && request.resource.data.createdAt == resource.data.createdAt
+        && (request.resource.data.name == resource.data.name || validName(request.resource.data.name))
         && (
           (isActiveOwner(userId)
             && request.resource.data.accountStatus == resource.data.accountStatus
@@ -155,15 +184,41 @@ service cloud.firestore {
 
       allow delete: if isActiveOwner(userId);
 
-      match /pets/{petId} {
-        allow read: if isActiveOwner(userId) || isAdmin();
+      match /caregivers/{memberId} {
+        allow read: if isOwner(userId) || isOwner(memberId);
+        allow create: if isActiveOwner(memberId)
+          && request.auth.token.email_verified == true
+          && request.resource.data.keys().hasOnly(['uid','email','invitationId','createdAt'])
+          && request.resource.data.uid == memberId
+          && request.resource.data.email == request.auth.token.email.lower()
+          && request.resource.data.createdAt == request.time
+          && get(/databases/$(database)/documents/careInvitations/$(request.resource.data.invitationId)).data.status == 'pending'
+          && getAfter(/databases/$(database)/documents/careInvitations/$(request.resource.data.invitationId)).data.status == 'accepted'
+          && getAfter(/databases/$(database)/documents/careInvitations/$(request.resource.data.invitationId)).data.acceptedBy == memberId
+          && getAfter(/databases/$(database)/documents/careInvitations/$(request.resource.data.invitationId)).data.ownerId == userId
+          && getAfter(/databases/$(database)/documents/careInvitations/$(request.resource.data.invitationId)).data.email == request.resource.data.email;
+        allow delete: if isActiveOwner(userId) || isOwner(memberId);
+      }
+      match /careSpaces/{ownerId} {
+        allow read, delete: if isOwner(userId);
+        allow create, update: if isActiveOwner(userId)
+          && request.resource.data.keys().hasOnly(['ownerId','ownerName','invitationId'])
+          && request.resource.data.ownerId == ownerId
+          && getAfter(/databases/$(database)/documents/users/$(ownerId)/caregivers/$(userId)).data.invitationId == request.resource.data.invitationId
+          && request.resource.data.ownerName == get(/databases/$(database)/documents/careInvitations/$(request.resource.data.invitationId)).data.ownerName;
+      }
 
-        allow create: if isActiveOwner(userId)
+      match /pets/{petId} {
+        allow read: if isActiveCare(userId) || isAdmin();
+
+        allow create: if isActiveCare(userId)
           && hasValidPetData(request.resource.data)
+          && validName(request.resource.data.name)
           && request.resource.data.createdAt == request.time;
 
-        allow update: if isActiveOwner(userId)
+        allow update: if isActiveCare(userId)
           && hasValidPetData(request.resource.data)
+          && (request.resource.data.name == resource.data.name || validName(request.resource.data.name))
           && request.resource.data.createdAt == resource.data.createdAt
           && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly([
@@ -177,33 +232,58 @@ service cloud.firestore {
               'photoUrl'
             ]);
 
-        allow delete: if isActiveOwner(userId);
+        allow delete: if isActiveCare(userId);
+
+        match /carePlan/{planId} {
+          allow read: if isActiveCare(userId) || isAdmin();
+          allow create, update: if planId == 'diet' && isActiveCare(userId)
+            && exists(/databases/$(database)/documents/users/$(userId)/pets/$(petId))
+            && request.resource.data.keys().hasOnly(['dailyGrams', 'weightKg', 'mealsPerDay', 'food', 'notes'])
+            && request.resource.data.dailyGrams is number && request.resource.data.dailyGrams >= 0 && request.resource.data.dailyGrams <= 10000
+            && request.resource.data.weightKg is number && request.resource.data.weightKg >= 0 && request.resource.data.weightKg <= 1000
+            && request.resource.data.mealsPerDay is int && request.resource.data.mealsPerDay >= 1 && request.resource.data.mealsPerDay <= 12
+            && request.resource.data.food is string && request.resource.data.food.size() <= 80
+            && request.resource.data.notes is string && request.resource.data.notes.size() <= 500;
+          allow delete: if isActiveCare(userId);
+        }
+        match /medicalRecords/{recordId} {
+          allow read: if isActiveCare(userId) || isAdmin();
+          allow create, update: if isActiveCare(userId)
+            && exists(/databases/$(database)/documents/users/$(userId)/pets/$(petId))
+            && request.resource.data.keys().hasOnly(['title','kind','date','notes','nextDate'])
+            && request.resource.data.title is string && request.resource.data.title.size() >= 2 && request.resource.data.title.size() <= 80
+            && request.resource.data.kind in ['Consulta','Vacuna','Desparasitación','Tratamiento','Otro']
+            && request.resource.data.date is timestamp
+            && request.resource.data.notes is string && request.resource.data.notes.size() <= 1000
+            && (request.resource.data.nextDate == null || request.resource.data.nextDate is timestamp);
+          allow delete: if isActiveCare(userId);
+        }
 
         match /feedingSchedules/{scheduleId} {
-          allow read: if isActiveOwner(userId) || isAdmin();
+          allow read: if isActiveCare(userId) || isAdmin();
 
-          allow create: if isActiveOwner(userId)
+          allow create: if isActiveCare(userId)
             && exists(/databases/$(database)/documents/users/$(userId)/pets/$(petId))
             && hasValidScheduleData(request.resource.data, scheduleId)
             && request.resource.data.createdAt == request.time;
 
-          allow update: if isActiveOwner(userId)
+          allow update: if isActiveCare(userId)
             && hasValidScheduleData(request.resource.data, scheduleId)
             && request.resource.data.id == resource.data.id
             && request.resource.data.createdAt == resource.data.createdAt
             && request.resource.data.diff(resource.data).affectedKeys()
-              .hasOnly(['time', 'active']);
+              .hasOnly(['time', 'active', 'label', 'foodType', 'notes', 'weekdays']);
 
-          allow delete: if isActiveOwner(userId);
+          allow delete: if isActiveCare(userId);
         }
       }
 
       match /feedingHistory/{historyId} {
-        allow read: if isActiveOwner(userId) || isAdmin();
+        allow read: if isActiveCare(userId) || isAdmin();
 
-        allow create: if isActiveOwner(userId)
+        allow create: if isActiveCare(userId)
           && exists(/databases/$(database)/documents/users/$(userId)/pets/$(request.resource.data.petId))
-          && exists(/databases/$(database)/documents/users/$(userId)/pets/$(request.resource.data.petId)/feedingSchedules/$(request.resource.data.scheduleId))
+          && (request.resource.data.get('manual', false) || exists(/databases/$(database)/documents/users/$(userId)/pets/$(request.resource.data.petId)/feedingSchedules/$(request.resource.data.scheduleId)))
           && hasValidHistoryData(request.resource.data, historyId, userId)
           && request.resource.data.createdAt == request.time
           && (
@@ -213,7 +293,7 @@ service cloud.firestore {
               && request.resource.data.fedAt == request.time)
           );
 
-        allow update: if isActiveOwner(userId)
+        allow update: if isActiveCare(userId)
           && hasValidHistoryData(request.resource.data, historyId, userId)
           && request.resource.data.id == resource.data.id
           && request.resource.data.userId == resource.data.userId
@@ -222,6 +302,7 @@ service cloud.firestore {
           && request.resource.data.scheduleId == resource.data.scheduleId
           && request.resource.data.dateKey == resource.data.dateKey
           && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.get('manual', false) == resource.data.get('manual', false)
           && (
             (resource.data.status == 'pending'
               && resource.data.fedAt == null
@@ -235,11 +316,38 @@ service cloud.firestore {
               && request.resource.data.fedAt == request.time
               && request.resource.data.scheduledTime == resource.data.scheduledTime
               && request.resource.data.diff(resource.data).affectedKeys()
-                .hasOnly(['status', 'fedAt']))
+                .hasOnly(['status', 'fedAt', 'grams', 'food']))
           );
 
-        allow delete: if isActiveOwner(userId);
+        allow delete: if isActiveCare(userId);
       }
+    }
+
+    match /careInvitations/{invitationId} {
+      function recipient() {
+        return request.auth != null && request.auth.token.email_verified == true
+          && resource.data.email == request.auth.token.email.lower();
+      }
+      allow read: if isOwner(resource.data.ownerId) || recipient();
+      allow create: if isActiveOwner(request.resource.data.ownerId)
+        && request.resource.data.keys().hasOnly(['ownerId','ownerName','email','status','acceptedBy','createdAt'])
+        && request.resource.data.ownerName is string && request.resource.data.ownerName.size() >= 1 && request.resource.data.ownerName.size() <= 60
+        && request.resource.data.email is string && request.resource.data.email.size() <= 254
+        && request.resource.data.email.matches('^[^ @]+@[^ @]+[.][^ @]+$')
+        && request.resource.data.email == request.resource.data.email.lower()
+        && request.resource.data.status == 'pending' && request.resource.data.acceptedBy == null
+        && request.resource.data.createdAt == request.time;
+      allow update: if request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.ownerName == resource.data.ownerName
+        && request.resource.data.createdAt == resource.data.createdAt
+        && ((isActiveOwner(resource.data.ownerId)
+          && request.resource.data.status == 'revoked'
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status']))
+        || (recipient() && isActiveOwner(request.auth.uid) && resource.data.status == 'pending'
+          && request.resource.data.status == 'accepted' && request.resource.data.acceptedBy == request.auth.uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','acceptedBy'])
+          && getAfter(/databases/$(database)/documents/users/$(resource.data.ownerId)/caregivers/$(request.auth.uid)).data.invitationId == invitationId));
     }
 
     // Explicit recursive matches allow secure collection-group dashboards.

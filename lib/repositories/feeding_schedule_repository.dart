@@ -21,8 +21,13 @@ class FeedingScheduleRepository {
   Future<String> createSchedule(
     String userId,
     String petId,
-    String time,
-  ) async {
+    String time, {
+    String label = '',
+    String foodType = 'Alimento',
+    String notes = '',
+    List<int> weekdays = const [1, 2, 3, 4, 5, 6, 7],
+  }) async {
+    _validate(time, label, foodType, notes, weekdays);
     final reference = _schedules(userId, petId).doc();
     try {
       await reference.set({
@@ -30,6 +35,10 @@ class FeedingScheduleRepository {
         'time': time,
         'active': true,
         'createdAt': FieldValue.serverTimestamp(),
+        'label': label.trim(),
+        'foodType': foodType.trim(),
+        'notes': notes.trim(),
+        'weekdays': weekdays,
       });
       return reference.id;
     } on FirebaseException catch (exception) {
@@ -41,10 +50,21 @@ class FeedingScheduleRepository {
     String userId,
     String petId,
     String scheduleId,
-    String time,
-  ) async {
+    String time, {
+    String label = '',
+    String foodType = 'Alimento',
+    String notes = '',
+    List<int> weekdays = const [1, 2, 3, 4, 5, 6, 7],
+  }) async {
+    _validate(time, label, foodType, notes, weekdays);
     try {
-      await _schedules(userId, petId).doc(scheduleId).update({'time': time});
+      await _schedules(userId, petId).doc(scheduleId).update({
+        'time': time,
+        'label': label.trim(),
+        'foodType': foodType.trim(),
+        'notes': notes.trim(),
+        'weekdays': weekdays,
+      });
     } on FirebaseException catch (exception) {
       throw FeedingScheduleFailure.fromFirebase(exception);
     }
@@ -96,4 +116,23 @@ class FeedingScheduleRepository {
       .collection('pets')
       .doc(petId)
       .collection('feedingSchedules');
+
+  void _validate(
+    String time,
+    String label,
+    String foodType,
+    String notes,
+    List<int> days,
+  ) {
+    if (!FeedingSchedule.isValidTime(time) ||
+        !FeedingSchedule.validWeekdays(days) ||
+        label.trim().length > 40 ||
+        foodType.trim().isEmpty ||
+        foodType.trim().length > 60 ||
+        notes.trim().length > 300) {
+      throw const FeedingScheduleFailure(
+        'Revisa la hora, los días y los datos del horario.',
+      );
+    }
+  }
 }

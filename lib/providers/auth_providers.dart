@@ -7,6 +7,7 @@ import 'package:petreminder_user/providers/notification_providers.dart';
 import 'package:petreminder_user/repositories/auth_repository.dart';
 import 'package:petreminder_user/repositories/user_repository.dart';
 import 'package:petreminder_user/services/auth_service.dart';
+import 'package:petreminder_user/core/errors/auth_failure.dart';
 
 final authServiceProvider = Provider<AuthService>(
   (ref) => AuthService(ref.watch(firebaseAuthProvider)),
@@ -38,12 +39,18 @@ final adminAccessProvider = FutureProvider<bool>((ref) async {
   ref.watch(currentUserIdProvider);
   final user = ref.read(authStateChangesProvider).value;
   if (user == null) return false;
-  final token = await user.getIdTokenResult();
+  final token = await user.getIdTokenResult().timeout(
+    const Duration(seconds: 15),
+  );
   return token.claims?['admin'] == true;
 });
 
 final authControllerProvider = AsyncNotifierProvider<AuthController, void>(
   AuthController.new,
+);
+
+final authTimeoutProvider = Provider<Duration>(
+  (ref) => const Duration(seconds: 30),
 );
 
 class AuthController extends AsyncNotifier<void> {
@@ -74,7 +81,10 @@ class AuthController extends AsyncNotifier<void> {
   }
 
   Future<bool> signInWithGoogle() {
-    return _run(ref.read(authRepositoryProvider).signInWithGoogle);
+    return _run(
+      ref.read(authRepositoryProvider).signInWithGoogle,
+      timeout: const Duration(minutes: 3),
+    );
   }
 
   Future<bool> sendPasswordResetEmail(String email) {
@@ -85,18 +95,38 @@ class AuthController extends AsyncNotifier<void> {
 
   Future<bool> signOut() {
     return _run(() async {
-      await ref.read(notificationServiceProvider).cancelAll();
+      await ref
+          .read(notificationServiceProvider)
+          .cancelAll()
+          .timeout(const Duration(seconds: 5))
+          .catchError((_) {});
       await ref.read(authRepositoryProvider).signOut();
     });
   }
 
-  Future<bool> _run(Future<void> Function() operation) async {
+  Future<bool> _run(
+    Future<void> Function() operation, {
+    Duration? timeout,
+  }) async {
+    if (state.isLoading) return false;
     state = const AsyncLoading();
     try {
-      await operation();
+      await operation().timeout(timeout ?? ref.read(authTimeoutProvider));
+      if (!ref.mounted) return false;
       state = const AsyncData(null);
       return true;
+    } on TimeoutException catch (_, stackTrace) {
+      if (!ref.mounted) return false;
+      state = AsyncError(
+        const AuthFailure(
+          'La solicitud tardó demasiado. Revisa tu conexión e inténtalo de nuevo.',
+          code: 'timeout',
+        ),
+        stackTrace,
+      );
+      return false;
     } catch (error, stackTrace) {
+      if (!ref.mounted) return false;
       state = AsyncError(error, stackTrace);
       return false;
     }

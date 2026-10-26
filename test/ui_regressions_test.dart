@@ -11,6 +11,7 @@ import 'package:petreminder_admin/providers/admin_providers.dart' as admin;
 import 'package:petreminder_admin/providers/firebase_providers.dart'
     as admin_firebase;
 import 'package:petreminder_user/app.dart';
+import 'package:petreminder_user/providers/sync_status_provider.dart';
 import 'package:petreminder_user/features/pets/presentation/pets_screen.dart';
 import 'package:petreminder_user/features/profile/presentation/profile_screen.dart';
 import 'package:petreminder_user/models/app_user.dart';
@@ -48,12 +49,13 @@ void main() {
       final container = ProviderContainer(
         overrides: [
           firestoreProvider.overrideWithValue(db),
+          currentDateProvider.overrideWith((ref) => Stream.value('2026-10-26')),
           authStateChangesProvider.overrideWith((ref) => changes.stream),
           adminAccessProvider.overrideWith((ref) async {
             final uid = ref.watch(currentUserIdProvider);
-          if (uid != null) {
-            permissionChecks++;
-          }
+            if (uid != null) {
+              permissionChecks++;
+            }
             return false;
           }),
           petsProvider.overrideWith((ref) => Stream.value([])),
@@ -208,6 +210,7 @@ void main() {
         appUserProvider.overrideWith((ref) => Stream.value(null)),
         petsProvider.overrideWith((ref) => Stream.value([])),
         notificationSyncProvider.overrideWith((ref) async {}),
+        syncStatusProvider.overrideWith((ref) => Stream.value(null)),
         ensureTodayForAllPetsProvider.overrideWith((ref) async {}),
       ],
     );

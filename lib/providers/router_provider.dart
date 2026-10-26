@@ -24,6 +24,8 @@ import 'package:petreminder_user/features/shell/presentation/app_shell_screen.da
 import 'package:petreminder_user/models/pet.dart';
 import 'package:petreminder_user/providers/auth_providers.dart';
 import 'package:petreminder_user/providers/profile_providers.dart';
+import 'package:petreminder_user/features/profile/presentation/care_sharing_screen.dart';
+import 'package:petreminder_user/features/pets/presentation/pet_care_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   // Refrescar redirecciones sin recrear el router al editar el perfil/token.
@@ -36,6 +38,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.login,
     refreshListenable: refresh,
     routes: [
+      GoRoute(path: '/family', builder: (_, _) => const CareSharingScreen()),
       GoRoute(
         path: AppRoutes.session,
         builder: (_, _) => const SessionScreen(),
@@ -122,6 +125,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final pet = state.extra;
           return pet is Pet ? PetFormScreen(pet: pet) : const PetsScreen();
+        },
+      ),
+      GoRoute(
+        path: '/pets/:petId/care',
+        builder: (_, state) {
+          final pet = state.extra;
+          return pet is Pet ? PetCareScreen(pet: pet) : const PetsScreen();
         },
       ),
       GoRoute(

@@ -53,6 +53,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 border: OutlineInputBorder(),
               ),
               validator: InputValidators.requiredName,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -78,7 +79,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               autofillHints: const [AutofillHints.newPassword],
               decoration: InputDecoration(
                 labelText: 'Contraseña',
-                helperText: 'Mínimo 6 caracteres',
+                helperText:
+                    'De 15 a 128 caracteres. Usa una frase única; puedes incluir espacios, números y símbolos.',
                 prefixIcon: const Icon(Icons.lock_outline_rounded),
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
@@ -94,7 +96,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   ),
                 ),
               ),
-              validator: InputValidators.password,
+              validator: InputValidators.newPassword,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               onFieldSubmitted: (_) => _submit(),
             ),
             const SizedBox(height: 24),

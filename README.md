@@ -4,10 +4,13 @@ Aplicación Flutter para Android orientada a organizar la alimentación de masco
 
 ## Estado de esta entrega
 
-Versión beta: **1.0.0-beta.1+2**, publicada el 20/10/2026.
-[Descargar APK](https://github.com/Eieen56/app_pet/releases/download/v1.0.0-beta.1/PetReminder-1.0.0-beta.1.apk) · [Release y SHA-256](https://github.com/Eieen56/app_pet/releases/tag/v1.0.0-beta.1).
-Este repositorio contiene el código; el instalador se distribuye en `Eieen56/app_pet`.
-Las pruebas de los tres testers siguen pendientes; no es una versión estable certificada.
+Versión en preparación: **1.0.0-beta.2+3**, con las correcciones y mejoras de la evaluación de Iker y Juan José.
+Seguimiento y fecha real de publicación: [entrega de mejoras](https://github.com/Eileeno56/pet/issues/4).
+[Guía de novedades y pruebas](docs/MEJORAS_BETA2.md).
+
+[Distribución Android](https://github.com/Eileeno56/app_pet/releases).
+Este repositorio contiene el código; el instalador se distribuye en `Eileeno56/app_pet`.
+La nueva beta requiere una segunda evaluación de los testers; no se declara estable.
 
 Repositorio: https://github.com/Eieen56/pet.
 Consultar [pruebas beta](docs/PRUEBAS_BETA.md), [entregas](docs/ENTREGAS.md)
@@ -30,7 +33,7 @@ y [cambios](CHANGELOG.md).
 - `android/local.properties` debe apuntar al SDK y Flutter de la computadora
   actual; el archivo recibido conserva rutas de otra computadora y no se publica.
 
-La CI analiza y prueba ambos módulos y la política de cierre de comentarios.
+La CI analiza y prueba ambos módulos y la política de cierre de comentarios de la ronda histórica beta.1.
 Para esas pruebas genera configuración Firebase ficticia, sin conectar a
 producción. El build Android usa la configuración local real, excluida de Git.
 Consultar los resultados reales de esta entrega en `docs/ENTREGAS.md`.
@@ -45,11 +48,12 @@ módulos sin perder los documentos antiguos, que se leen con cero meses.
 
 | Campo | Rango permitido |
 | --- | --- |
-| Nombre de usuario o mascota | 2–60 caracteres |
+| Nombre de usuario o mascota | 2–60 caracteres; letras y espacios |
 | Especie manual | 2–40 caracteres |
 | Raza manual | 2–80 caracteres; opcional para especie manual |
 | Descripción | 0–500 caracteres |
 | Meses adicionales | 0–11 |
+| Contraseña de registro nueva | 15–128 caracteres; admite frases y espacios |
 | Edad total de Perro / Gato | 0–30 años |
 | Conejo / Ave / Hámster | 0–20 / 0–100 / 0–5 años |
 | Tortuga / Pez / Otro | 0–200 / 0–100 / 0–250 años |

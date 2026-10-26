@@ -10,12 +10,12 @@ class AuthFailure implements Exception {
   factory AuthFailure.fromFirebaseAuth(FirebaseAuthException exception) {
     final message = switch (exception.code) {
       'invalid-email' => 'El correo electrónico no es válido.',
-      'wrong-password' ||
-      'invalid-credential' => 'El correo o la contraseña son incorrectos.',
-      'user-not-found' => 'No existe una cuenta con ese correo.',
+      'wrong-password' || 'invalid-credential' || 'user-not-found' =>
+        'No fue posible iniciar sesión. Revisa tus datos e inténtalo de nuevo.',
       'email-already-in-use' =>
         'Ya existe una cuenta registrada con ese correo.',
-      'weak-password' => 'La contraseña debe tener al menos 6 caracteres.',
+      'weak-password' =>
+        'La contraseña no cumple los requisitos. Usa una frase larga y única.',
       'user-disabled' => 'Esta cuenta se encuentra deshabilitada.',
       'operation-not-allowed' => 'Este método de acceso no está habilitado.',
       'too-many-requests' =>

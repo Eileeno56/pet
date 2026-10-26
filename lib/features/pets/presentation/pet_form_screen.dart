@@ -21,6 +21,7 @@ class PetFormScreen extends ConsumerStatefulWidget {
 
 class _PetFormScreenState extends ConsumerState<PetFormScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _ageKey = GlobalKey<FormFieldState<String>>();
   late final TextEditingController _nameController;
   late final TextEditingController _breedController;
   late final TextEditingController _ageController;
@@ -154,6 +155,7 @@ class _PetFormScreenState extends ConsumerState<PetFormScreen> {
                       border: OutlineInputBorder(),
                     ),
                     validator: InputValidators.petName,
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
@@ -254,6 +256,7 @@ class _PetFormScreenState extends ConsumerState<PetFormScreen> {
                   ],
                   const SizedBox(height: 8),
                   TextFormField(
+                    key: _ageKey,
                     controller: _ageController,
                     enabled: !operation.isLoading,
                     keyboardType: TextInputType.number,
@@ -265,6 +268,7 @@ class _PetFormScreenState extends ConsumerState<PetFormScreen> {
                       prefixIcon: Icon(Icons.cake_outlined),
                       border: OutlineInputBorder(),
                     ),
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
                     validator: (value) => InputValidators.petAge(
                       value,
                       species: _species,
@@ -287,6 +291,8 @@ class _PetFormScreenState extends ConsumerState<PetFormScreen> {
                       border: const OutlineInputBorder(),
                     ),
                     validator: InputValidators.petMonths,
+                    onChanged: (_) => _ageKey.currentState?.validate(),
+                    autovalidateMode: AutovalidateMode.onUserInteraction,
                   ),
                   const SizedBox(height: 16),
                   TextFormField(

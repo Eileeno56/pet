@@ -138,18 +138,19 @@ class _PetCard extends ConsumerWidget {
     final activeSchedules = schedules
         .where((schedule) => schedule.active)
         .toList();
-    final now = TimeOfDay.now();
-    final nowMinutes = (now.hour * 60) + now.minute;
-    activeSchedules.sort((a, b) {
-      final aOffset = (a.minutesSinceMidnight - nowMinutes) % (24 * 60);
-      final bOffset = (b.minutesSinceMidnight - nowMinutes) % (24 * 60);
-      return aOffset.compareTo(bOffset);
-    });
-    final nextMeal = activeSchedules.isEmpty
+    final now = DateTime.now();
+    activeSchedules.sort((a, b) => a.nextDate(now).compareTo(b.nextDate(now)));
+    final next = activeSchedules.isEmpty
+        ? null
+        : activeSchedules.first.nextDate(now);
+    final nextMeal = next == null
         ? 'Sin configurar'
-        : activeSchedules.first.time;
+        : '${next.day == now.day && next.month == now.month ? "Hoy" : "${next.day}/${next.month}"} ${activeSchedules.first.time}';
     final todayKey = FeedingRecord.dateKeyFor(DateTime.now());
-    final activeIds = activeSchedules.map((schedule) => schedule.id).toSet();
+    final activeIds = activeSchedules
+        .where((s) => s.occursOn(now))
+        .map((schedule) => schedule.id)
+        .toSet();
     final todayRecords = (ref.watch(feedingHistoryProvider).value ?? const [])
         .where(
           (record) =>
@@ -158,8 +159,8 @@ class _PetCard extends ConsumerWidget {
               activeIds.contains(record.scheduleId),
         )
         .toList();
-    final status = activeSchedules.isEmpty
-        ? 'Sin horarios'
+    final status = activeIds.isEmpty
+        ? 'Sin comidas hoy'
         : todayRecords.isNotEmpty &&
               todayRecords.every((record) => record.isFed)
         ? 'Alimentada'
@@ -167,7 +168,7 @@ class _PetCard extends ConsumerWidget {
 
     return Card(
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: disabled ? null : onOpen,
@@ -290,7 +291,7 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,

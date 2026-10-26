@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:petreminder_user/core/validators/input_validators.dart';
 import 'package:petreminder_user/core/auth/admin_credentials.dart';
 import 'package:petreminder_user/core/errors/auth_failure.dart';
 import 'package:petreminder_user/repositories/user_repository.dart';
@@ -15,6 +17,10 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
+    final validation =
+        InputValidators.requiredName(name) ??
+        InputValidators.newPassword(password);
+    if (validation != null) throw AuthFailure(validation);
     UserCredential? credential;
 
     try {
@@ -50,17 +56,32 @@ class AuthRepository {
       );
       final user = credential.user;
       if (user != null) {
-        final token = await user.getIdTokenResult(true);
+        final token = await user
+            .getIdTokenResult(true)
+            .timeout(const Duration(seconds: 5));
         if (token.claims?['admin'] == true) {
           return;
         }
-        await _userRepository.ensureAccountIsActive(user);
-        await _userRepository.updateLastActivity(user);
+        await _userRepository
+            .ensureAccountIsActive(user)
+            .timeout(const Duration(seconds: 5));
+        await _userRepository
+            .updateLastActivity(user)
+            .timeout(const Duration(seconds: 5));
       }
+    } on TimeoutException {
+      unawaited(_authService.signOut().catchError((_) {}));
+      throw const AuthFailure(
+        'La solicitud tardó demasiado. Revisa tu conexión e inténtalo de nuevo.',
+        code: 'timeout',
+      );
     } on FirebaseAuthException catch (exception) {
       throw AuthFailure.fromFirebaseAuth(exception);
     } on AuthFailure {
-      await _authService.signOut();
+      await _authService.signOut().timeout(
+        const Duration(seconds: 2),
+        onTimeout: () {},
+      );
       rethrow;
     }
   }
