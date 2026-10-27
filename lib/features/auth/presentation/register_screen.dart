@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:petreminder_user/core/validators/input_validators.dart';
 import 'package:petreminder_user/features/auth/presentation/widgets/auth_feedback.dart';
 import 'package:petreminder_user/features/auth/presentation/widgets/auth_scaffold.dart';
+import 'package:petreminder_user/features/auth/presentation/widgets/password_strength_indicator.dart';
 import 'package:petreminder_user/providers/auth_providers.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -80,7 +81,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               decoration: InputDecoration(
                 labelText: 'Contraseña',
                 helperText:
-                    'De 15 a 128 caracteres. Usa una frase única; puedes incluir espacios, números y símbolos.',
+                    'De 8 a 128 caracteres, con mayúscula, minúscula, número y símbolo. Evita contraseñas comunes.',
+                helperMaxLines: 4,
+                errorMaxLines: 3,
                 prefixIcon: const Icon(Icons.lock_outline_rounded),
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
@@ -97,9 +100,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 ),
               ),
               validator: InputValidators.newPassword,
+              onChanged: (_) => setState(() {}),
               autovalidateMode: AutovalidateMode.onUserInteraction,
               onFieldSubmitted: (_) => _submit(),
             ),
+            const SizedBox(height: 8),
+            PasswordStrengthIndicator(password: _passwordController.text),
             const SizedBox(height: 24),
             FilledButton(
               onPressed: isLoading ? null : _submit,

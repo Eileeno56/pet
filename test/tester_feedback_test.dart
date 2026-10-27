@@ -61,16 +61,16 @@ void main() {
     }
   });
   test(
-    'registro usa frases largas sin impedir acceso con contraseñas anteriores',
+    'registro exige ocho caracteres y composición sin bloquear cuentas anteriores',
     () {
       expect(InputValidators.newPassword('eei3i3i3ii33'), isNotNull);
       expect(InputValidators.newPassword('passwordpassword'), isNotNull);
       expect(InputValidators.newPassword('aaaaaaaaaaaaaaa'), isNotNull);
       expect(InputValidators.newPassword('               '), isNotNull);
       expect(InputValidators.newPassword('***************'), isNotNull);
-      expect(InputValidators.newPassword('Mi conejo salta al sol!'), isNull);
+      expect(InputValidators.newPassword('Mi conejo salta al sol!7'), isNull);
       expect(
-        InputValidators.newPassword('Una frase larga sin símbolos'),
+        InputValidators.newPassword('Una frase larga sin símbolos7!'),
         isNull,
       );
       expect(InputValidators.password('123456'), isNull);

@@ -1,5 +1,14 @@
 # Historial de cambios
 
+## [1.0.0-beta.4] — 2026-10-27
+
+- Registro desde 8 caracteres con mayúscula, minúscula, número y símbolo; política de composición y longitud aplicada también en Firebase.
+- Indicador accesible con círculo rojo «Poco seguro», amarillo «Seguro» y verde «Muy seguro».
+- Nombres reservados por espacio de cuidado mediante transacciones y reglas, para impedir duplicados incluso con escrituras simultáneas.
+- Libera nombres al renombrar o borrar; conserva los registros duplicados anteriores sin renombrarlos automáticamente y exige corregirlos al editar.
+- Mantiene confirmación por enlace, Spark y acceso de cuentas anteriores.
+- Agrega pruebas, guía de ramas y seguimiento de entrega en issue #9.
+
 ## [1.0.0-beta.3] — 2026-10-27
 
 - Exige confirmar el correo mediante el enlace de Firebase Authentication antes de abrir los datos de la app.

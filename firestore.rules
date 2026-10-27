@@ -68,6 +68,7 @@ service cloud.firestore {
     function hasValidPetData(data) {
       return data.keys().hasOnly([
           'name',
+          'nameKey',
           'species',
           'breed',
           'age',
@@ -106,6 +107,21 @@ service cloud.firestore {
         && data.description.size() <= 500
         && data.photoUrl == null
         && data.createdAt is timestamp;
+    }
+
+    function hasPetName(userId, petId, data) {
+      return data.nameKey == data.name.lower()
+        && getAfter(/databases/$(database)/documents/users/$(userId)/petNames/$(data.nameKey)).data.petIds.hasAny([petId]);
+    }
+
+    function releasedName(userId, petId, key) {
+      return !existsAfter(/databases/$(database)/documents/users/$(userId)/pets/$(petId))
+        || getAfter(/databases/$(database)/documents/users/$(userId)/pets/$(petId)).data.nameKey != key;
+    }
+
+    function removedReservation(userId, petId, key) {
+      return !existsAfter(/databases/$(database)/documents/users/$(userId)/petNames/$(key))
+        || !getAfter(/databases/$(database)/documents/users/$(userId)/petNames/$(key)).data.petIds.hasAny([petId]);
     }
 
     function hasValidScheduleData(data, scheduleId) {
@@ -212,21 +228,48 @@ service cloud.firestore {
           && request.resource.data.ownerName == get(/databases/$(database)/documents/careInvitations/$(request.resource.data.invitationId)).data.ownerName;
       }
 
+      match /petNames/{key} {
+        allow read: if isActiveCare(userId) || isAdmin();
+        allow create: if isActiveCare(userId)
+          && request.resource.data.keys().hasOnly(['petIds'])
+          && request.resource.data.petIds is list
+          && request.resource.data.petIds.size() == 1
+          && getAfter(/databases/$(database)/documents/users/$(userId)/pets/$(request.resource.data.petIds[0])).data.nameKey == key
+          && getAfter(/databases/$(database)/documents/users/$(userId)/pets/$(request.resource.data.petIds[0])).data.name.lower() == key;
+        // Solo se permite retirar una reserva. Los duplicados anteriores se conservan hasta renombrarlos.
+        allow update: if isActiveCare(userId)
+          && request.resource.data.keys().hasOnly(['petIds'])
+          && request.resource.data.petIds is list
+          && request.resource.data.petIds.size() > 0
+          && request.resource.data.petIds.size() == resource.data.petIds.size() - 1
+          && request.resource.data.petIds.toSet().size() == request.resource.data.petIds.size()
+          && request.resource.data.petIds.hasOnly(resource.data.petIds)
+          && releasedName(userId, resource.data.petIds.removeAll(request.resource.data.petIds)[0], key);
+        allow delete: if isActiveCare(userId) && resource.data.petIds.size() == 1
+          && releasedName(userId, resource.data.petIds[0], key);
+      }
+
       match /pets/{petId} {
         allow read: if isActiveCare(userId) || isAdmin();
 
         allow create: if isActiveCare(userId)
           && hasValidPetData(request.resource.data)
           && validName(request.resource.data.name)
+          && hasPetName(userId, petId, request.resource.data)
+          && getAfter(/databases/$(database)/documents/users/$(userId)/petNames/$(request.resource.data.nameKey)).data.petIds == [petId]
           && request.resource.data.createdAt == request.time;
 
         allow update: if isActiveCare(userId)
           && hasValidPetData(request.resource.data)
+          && hasPetName(userId, petId, request.resource.data)
+          && (request.resource.data.nameKey == resource.data.nameKey
+            || removedReservation(userId, petId, resource.data.nameKey))
           && (request.resource.data.name == resource.data.name || validName(request.resource.data.name))
           && request.resource.data.createdAt == resource.data.createdAt
           && request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly([
               'name',
+              'nameKey',
               'species',
               'breed',
               'age',
@@ -236,7 +279,8 @@ service cloud.firestore {
               'photoUrl'
             ]);
 
-        allow delete: if isActiveCare(userId);
+        allow delete: if isActiveCare(userId)
+          && removedReservation(userId, petId, resource.data.nameKey);
 
         match /carePlan/{planId} {
           allow read: if isActiveCare(userId) || isAdmin();

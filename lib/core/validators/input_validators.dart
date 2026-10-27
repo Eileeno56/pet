@@ -61,29 +61,40 @@ abstract final class InputValidators {
 
   // La política nueva solo se aplica al registro. Las cuentas antiguas conservan acceso.
   static String? newPassword(String? value) {
-    final basic = password(value);
-    if (basic != null) return basic;
-    if (value!.runes.length < 15) {
-      return 'Usa al menos 15 caracteres; puedes escribir una frase.';
+    if (value == null || value.isEmpty) return 'Ingresa tu contraseña.';
+    if (value.length < 8) return 'Usa al menos 8 caracteres.';
+    if (value.length > 128) return 'Usa como máximo 128 caracteres.';
+    if (!RegExp(r'[A-Z]').hasMatch(value) ||
+        !RegExp(r'[a-z]').hasMatch(value) ||
+        !RegExp(r'[0-9]').hasMatch(value) ||
+        !RegExp(r'[^A-Za-z0-9\s]').hasMatch(value)) {
+      return 'Incluye mayúscula, minúscula, número y símbolo.';
     }
-    final compact = value.replaceAll(RegExp(r'\s'), '');
-    if (compact.runes.length < 10 ||
-        RegExp(r'^(.)\1+$', dotAll: true).hasMatch(compact)) {
-      return 'Elige una frase con más contenido, sin rellenarla con espacios o caracteres repetidos.';
-    }
-    final normalized = value.toLowerCase().replaceAll(RegExp(r'[\s\W_]'), '');
-    if (RegExp(r'^(.)\1+$').hasMatch(normalized) ||
-        [
-          '123456789012345',
-          'passwordpassword',
-          'contraseñacontraseña',
-          'qwertyuiopasdfgh',
-          'petreminderpetreminder',
-        ].contains(normalized)) {
-      return 'Elige una frase menos común y difícil de adivinar.';
+    final normalized = value.toLowerCase().replaceAll(
+      RegExp(r'[0-9\s\W_]'),
+      '',
+    );
+    if ([
+          'password',
+          'contrasea',
+          'qwerty',
+          'abcd',
+          'petreminder',
+        ].contains(normalized) ||
+        RegExp(r'^(.{1,4})\1+$', dotAll: true).hasMatch(value)) {
+      return 'Evita contraseñas comunes y secuencias repetidas.';
     }
     return null;
   }
+
+  // Estimación visual: no sustituye la validación ni garantiza invulnerabilidad.
+  static int passwordStrength(String value) => newPassword(value) != null
+      ? 0
+      : value.length >= 12 && value.runes.toSet().length >= 8
+      ? 2
+      : 1;
+
+  static String petNameKey(String value) => value.trim().toLowerCase();
 
   static String? petName(String? value) {
     final name = value?.trim() ?? '';
