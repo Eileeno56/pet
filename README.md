@@ -5,7 +5,8 @@ Aplicación Flutter para Android orientada a organizar la alimentación de masco
 ## Estado de esta entrega
 
 Código actualizado: **1.0.0-beta.2+3**, con las correcciones y mejoras de la evaluación de Iker y Juan José.
-El APK está preparado como borrador; su activación y publicación final están pendientes de renovar la sesión de Firebase para desplegar las reglas nuevas.
+APK publicado el **26/10/2026 a las 18:15:26, America/Mexico_City**, antes del plazo de las 21:00. Las reglas nuevas de Firebase están desplegadas.
+[Descargar APK beta.2](https://github.com/Eileeno56/app_pet/releases/download/v1.0.0-beta.2/PetReminder-1.0.0-beta.2.apk).
 Seguimiento y fecha real de publicación: [entrega de mejoras](https://github.com/Eileeno56/pet/issues/4).
 [Guía de novedades y pruebas](docs/MEJORAS_BETA2.md).
 
@@ -13,7 +14,7 @@ Seguimiento y fecha real de publicación: [entrega de mejoras](https://github.co
 Este repositorio contiene el código; el instalador se distribuye en `Eileeno56/app_pet`.
 La nueva beta requiere una segunda evaluación de los testers; no se declara estable.
 
-Repositorio: https://github.com/Eieen56/pet.
+Repositorio: https://github.com/Eileeno56/pet.
 Consultar [pruebas beta](docs/PRUEBAS_BETA.md), [entregas](docs/ENTREGAS.md)
 y [cambios](CHANGELOG.md).
 
