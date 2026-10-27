@@ -16,6 +16,8 @@ import 'package:petreminder_user/repositories/pet_repository.dart';
 import 'package:petreminder_user/repositories/user_repository.dart';
 
 class TestUser extends Fake implements User {
+  @override
+  bool get emailVerified => true;
   TestUser(
     this.uid, {
     this.displayName = 'María',

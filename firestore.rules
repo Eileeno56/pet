@@ -6,14 +6,18 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
 
+    function hasVerifiedEmail() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
     function isActiveOwner(userId) {
-      return isOwner(userId)
+      return hasVerifiedEmail() && isOwner(userId)
         && get(/databases/$(database)/documents/users/$(userId))
           .data.accountStatus == 'active';
     }
 
     function isActiveCare(userId) {
-      return isActiveOwner(userId) || (request.auth != null
+      return isActiveOwner(userId) || (hasVerifiedEmail()
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.accountStatus == 'active'
         && get(/databases/$(database)/documents/users/$(userId)).data.accountStatus == 'active'
         && exists(/databases/$(database)/documents/users/$(userId)/caregivers/$(request.auth.uid))
@@ -26,7 +30,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return request.auth != null
+      return hasVerifiedEmail()
         && request.auth.token.keys().hasAny(['admin'])
         && request.auth.token.admin == true;
     }
@@ -185,7 +189,7 @@ service cloud.firestore {
       allow delete: if isActiveOwner(userId);
 
       match /caregivers/{memberId} {
-        allow read: if isOwner(userId) || isOwner(memberId);
+        allow read: if hasVerifiedEmail() && (isOwner(userId) || isOwner(memberId));
         allow create: if isActiveOwner(memberId)
           && request.auth.token.email_verified == true
           && request.resource.data.keys().hasOnly(['uid','email','invitationId','createdAt'])
@@ -197,10 +201,10 @@ service cloud.firestore {
           && getAfter(/databases/$(database)/documents/careInvitations/$(request.resource.data.invitationId)).data.acceptedBy == memberId
           && getAfter(/databases/$(database)/documents/careInvitations/$(request.resource.data.invitationId)).data.ownerId == userId
           && getAfter(/databases/$(database)/documents/careInvitations/$(request.resource.data.invitationId)).data.email == request.resource.data.email;
-        allow delete: if isActiveOwner(userId) || isOwner(memberId);
+        allow delete: if isActiveOwner(userId) || (hasVerifiedEmail() && isOwner(memberId));
       }
       match /careSpaces/{ownerId} {
-        allow read, delete: if isOwner(userId);
+        allow read, delete: if hasVerifiedEmail() && isOwner(userId);
         allow create, update: if isActiveOwner(userId)
           && request.resource.data.keys().hasOnly(['ownerId','ownerName','invitationId'])
           && request.resource.data.ownerId == ownerId
@@ -328,7 +332,7 @@ service cloud.firestore {
         return request.auth != null && request.auth.token.email_verified == true
           && resource.data.email == request.auth.token.email.lower();
       }
-      allow read: if isOwner(resource.data.ownerId) || recipient();
+      allow read: if hasVerifiedEmail() && (isOwner(resource.data.ownerId) || recipient());
       allow create: if isActiveOwner(request.resource.data.ownerId)
         && request.resource.data.keys().hasOnly(['ownerId','ownerName','email','status','acceptedBy','createdAt'])
         && request.resource.data.ownerName is string && request.resource.data.ownerName.size() >= 1 && request.resource.data.ownerName.size() <= 60

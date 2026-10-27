@@ -26,6 +26,7 @@ import 'package:petreminder_user/providers/auth_providers.dart';
 import 'package:petreminder_user/providers/profile_providers.dart';
 import 'package:petreminder_user/features/profile/presentation/care_sharing_screen.dart';
 import 'package:petreminder_user/features/pets/presentation/pet_care_screen.dart';
+import 'package:petreminder_user/features/auth/presentation/verify_email_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   // Refrescar redirecciones sin recrear el router al editar el perfil/token.
@@ -38,6 +39,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.login,
     refreshListenable: refresh,
     routes: [
+      GoRoute(
+        path: AppRoutes.verifyEmail,
+        builder: (_, _) => const VerifyEmailScreen(),
+      ),
       GoRoute(path: '/family', builder: (_, _) => const CareSharingScreen()),
       GoRoute(
         path: AppRoutes.session,
@@ -165,6 +170,14 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (!isAuthenticated && !isPublicRoute) {
         return AppRoutes.login;
+      }
+      if (isAuthenticated && !authState.value!.emailVerified) {
+        return state.matchedLocation == AppRoutes.verifyEmail
+            ? null
+            : AppRoutes.verifyEmail;
+      }
+      if (isAuthenticated && state.matchedLocation == AppRoutes.verifyEmail) {
+        return AppRoutes.session;
       }
       if (isAuthenticated && (adminAccess.isLoading || adminAccess.hasError)) {
         return atSession ? null : AppRoutes.session;

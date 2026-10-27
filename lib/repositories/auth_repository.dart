@@ -19,6 +19,7 @@ class AuthRepository {
   }) async {
     final validation =
         InputValidators.requiredName(name) ??
+        InputValidators.email(email) ??
         InputValidators.newPassword(password);
     if (validation != null) throw AuthFailure(validation);
     UserCredential? credential;
@@ -56,6 +57,7 @@ class AuthRepository {
       );
       final user = credential.user;
       if (user != null) {
+        if (!user.emailVerified) return;
         final token = await user
             .getIdTokenResult(true)
             .timeout(const Duration(seconds: 5));
