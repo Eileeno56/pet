@@ -6,12 +6,12 @@ Estado comprobado el 27/10/2026, America/Mexico_City. Seguimiento: [issue #5](ht
 | --- | --- | --- |
 | Cinco o más commits | [Historial real](https://github.com/Eileeno56/pet/commits/main), 11 commits antes de esta revisión | Cumplido |
 | Varias ramas | `main`, `fix/profile-pets-admin` y `codex/tester-feedback-beta2` publicadas; conservan trabajo real | Publicadas |
-| Pull requests | Esta guía se incorpora mediante PR; las correcciones anteriores se integraron directamente en main, sin PR histórico | Flujo de PR iniciado en esta entrega |
+| Pull requests | Esta guía se incorpora mediante PR; las correcciones anteriores se integraron directamente en main, sin PR histórico | PR #6 y #7 integrados con CI aprobada |
 | Tags | `v1.0.0-beta.1` y `v1.0.0-beta.2` | Publicados |
 | Releases | [Versiones del código](https://github.com/Eileeno56/pet/releases) y [distribución Android](https://github.com/Eileeno56/app_pet/releases) | Consultar cada versión y sus archivos |
 | Tres reportes de testers | [Carpetas de opiniones](../opiniones/README.md): Iker y Juan José entregaron; Abraham pendiente | Incompleto |
 | Correcciones | [Observación y cambio](MEJORAS_BETA2.md), [pruebas y publicación](ENTREGAS.md), [issue #4](https://github.com/Eileeno56/pet/issues/4) | Validación técnica aprobada de beta.2; revalidación humana pendiente |
-| Correo confirmado | Beta.2 comprueba credenciales; el enlace de Firebase y bloqueo obligatorio se preparan para beta.3, conservando Spark | Activación pendiente en issue #5 |
+| Correo confirmado | Beta.2 comprueba credenciales; beta.3 exige el enlace de Firebase y bloquea datos hasta confirmar, conservando Spark | Publicado y probado en issue #5; HTTP 403 sin claim verificado y 200 con sesión renovada |
 | Contraseñas | Registro: 15–128 caracteres y rechazo de ciertos patrones; acceso de cuentas antiguas conservado. Política de longitud activada en Firebase el 27/10/2026; prueba REST de contraseña de seis caracteres rechazada | Servidor y cliente verificados para registros nuevos |
 
 ## Revalidación que deben entregar los testers

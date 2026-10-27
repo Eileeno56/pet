@@ -2,6 +2,8 @@
 
 Plazo: **27/10/2026 08:00 America/Mexico_City (14:00 UTC)**. Seguimiento: [issue #5](https://github.com/Eileeno56/pet/issues/5).
 
+**Publicada el 27/10/2026 a las 07:52:47 America/Mexico_City**, con APK y checksum en [Release beta.3](https://github.com/Eileeno56/pet/releases/tag/v1.0.0-beta.3). Recepción real, confirmación y acceso verificados; ver [evidencias](ENTREGAS.md).
+
 ## Decisión y costo
 
 La propietaria eligió el enlace de verificación de Firebase Authentication para conservar Spark, sin activar Blaze. La alternativa anterior de cinco dígitos con Cloud Functions fue retirada antes de desplegarse. No se necesita un servidor propio, SMTP, contraseña de aplicación de Gmail ni secretos de envío.

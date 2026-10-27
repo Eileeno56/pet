@@ -1,5 +1,31 @@
 # Registro de entregas
 
+## Actualización beta.3 — 27 de octubre de 2026
+
+Plazo: **27/10/2026 08:00 America/Mexico_City (14:00 UTC)**. [Seguimiento #5](https://github.com/Eileeno56/pet/issues/5).
+
+| Elemento | Evidencia | Estado |
+| --- | --- | --- |
+| Código y tag | Main `7ea71427cb606e354f4f5de7360b8e7281b81514`; tag `v1.0.0-beta.3`; [PR #7](https://github.com/Eileeno56/pet/pull/7) integrado | Publicados |
+| Ramas y revisión docente | Ramas de trabajo reales publicadas; [PR #6](https://github.com/Eileeno56/pet/pull/6) integrado; reportes de referencia en opiniones/ | Publicados en pet |
+| Pruebas | 51 pruebas Flutter y análisis sin incidencias; CI ejecuta también 2 pruebas admin y 8 de política beta | Aprobadas |
+| CI del código | [40513111436](https://github.com/Eileeno56/pet/actions/runs/40513111436), head funcional `f9383badbcbf28729ba6ffb340ec9cca7ec9c02e` | Success |
+| Contraseñas nuevas | Política Firebase 15–128; prueba REST con seis caracteres rechazada | Verificada; cuentas antiguas conservan acceso |
+| Correo real | Firebase aceptó envío; propietaria recibió y pulsó enlace; consulta Auth con emailVerified=true a las 07:35:13; claim renovado email_verified=true | Confirmado sin SMTP propio |
+| Reglas | Compiladas y desplegadas en petreminder-user-2026; pruebas de reglas en emulador aprobadas | Desplegadas |
+| Prueba real de acceso | 07:52:18: token previo sin verificación HTTP 403; token renovado verificado HTTP 200 sobre la misma mascota temporal | Aprobada |
+| Limpieza | Documentos y cuenta temporal de Auth eliminados; tokens locales protegidos eliminados | Completada |
+| Plan | Spark; billingEnabled=false comprobado; Cloud Functions/SMTP retirados antes de desplegarse | Sin activar Blaze |
+| APK | 1.0.0-beta.3, versionCode 4, API 24–36; build release universal correcto; 63,941,801 bytes | Compilado |
+| Firma | SHA-256 certificado d523fbae118f34d7b9c46064635c37d0354d21d55792e8f76836fe936b3cf57e, compatible con beta.2 | Verificada |
+| SHA-256 APK | b8433fefc3b358994ca9d7117c4f8c759264dce4620fa71df3846e4685abf804 | Digest remoto comprobado |
+| Publicación | [Release beta.3 en pet](https://github.com/Eileeno56/pet/releases/tag/v1.0.0-beta.3), 27/10/2026 07:52:47 UTC−06:00 (13:52:47 UTC); API pública y descarga HTTP 200 | Entregada antes de las 08:00 |
+| Evaluación humana | Iker y Juan José reportaron beta.1; falta Abraham y la revalidación de las versiones corregidas | Seguimiento abierto |
+
+**Entrega técnica publicada a tiempo y pruebas aprobadas.** El issue/hito general permanece abierto por los reportes y revalidaciones humanas pendientes; no se atribuye aprobación a los testers. No se configuró una automatización.
+
+La beta.3 se validó con tests Flutter, build, metadatos/firma del APK y una prueba real de correo/Auth/Firestore. No se afirma una nueva instalación ni una prueba completa en teléfonos físicos de beta.3; la evidencia de instalación de beta.2 se conserva abajo. Los certificados de confianza del sistema se usaron para resolver la descarga de dependencias, manteniendo TLS.
+
 ## Actualización beta.2 — 26 de octubre de 2026
 
 **Plazo comprometido: 26/10/2026, 21:00, America/Mexico_City (UTC−06:00).**

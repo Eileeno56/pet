@@ -4,18 +4,18 @@ Aplicación Flutter para Android orientada a organizar la alimentación de masco
 
 [Revisión de requisitos docentes](docs/REVISION_DOCENTE.md) · [Opiniones de testers](opiniones/README.md)
 
-Preparación de la siguiente versión: [confirmación obligatoria del correo mediante enlace de Firebase](docs/CONFIRMACION_CORREO.md). La verificación del envío y la publicación de beta.3 se registrarán en el [issue #5](https://github.com/Eileeno56/pet/issues/5); el APK beta.2 publicado abajo conserva su comportamiento original.
+La beta.3 incorpora [confirmación obligatoria del correo mediante enlace de Firebase](docs/CONFIRMACION_CORREO.md). La verificación del envío y la publicación de beta.3 están registradas en el [issue #5](https://github.com/Eileeno56/pet/issues/5); el APK beta.2 publicado abajo conserva su comportamiento original.
 
 ## Estado de esta entrega
 
-Código actualizado: **1.0.0-beta.2+3**, con las correcciones y mejoras de la evaluación de Iker y Juan José.
-APK publicado el **26/10/2026 a las 18:15:26, America/Mexico_City**, antes del plazo de las 21:00. Las reglas nuevas de Firebase están desplegadas.
-[Descargar APK beta.2](https://github.com/Eileeno56/app_pet/releases/download/v1.0.0-beta.2/PetReminder-1.0.0-beta.2.apk).
-Seguimiento y fecha real de publicación: [entrega de mejoras](https://github.com/Eileeno56/pet/issues/4).
+Código actualizado: **1.0.0-beta.3+4**, con las correcciones y mejoras de la evaluación de Iker y Juan José.
+APK publicado el **27/10/2026 a las 07:52:47, America/Mexico_City**, antes del plazo de las 08:00. Las reglas nuevas de Firebase están desplegadas.
+[Descargar APK beta.3](https://github.com/Eileeno56/pet/releases/download/v1.0.0-beta.3/PetReminder-1.0.0-beta.3.apk).
+Seguimiento y fecha real de publicación: [entrega de mejoras](https://github.com/Eileeno56/pet/issues/5).
 [Guía de novedades y pruebas](docs/MEJORAS_BETA2.md).
 
-[Distribución Android](https://github.com/Eileeno56/app_pet/releases).
-Este repositorio contiene el código; el instalador se distribuye en `Eileeno56/app_pet`.
+[Distribución Android](https://github.com/Eileeno56/pet/releases).
+Este repositorio contiene el código, tags, releases e instalador Android. `Eileeno56/app_pet` conserva el historial de distribución y los reportes originales.
 La nueva beta requiere una segunda evaluación de los testers; no se declara estable.
 
 Repositorio: https://github.com/Eileeno56/pet.
