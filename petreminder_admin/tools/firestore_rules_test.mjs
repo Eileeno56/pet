@@ -38,6 +38,7 @@ const userData = (uid, status = 'active') => ({
 
 const petData = {
   name: 'Max',
+  nameKey: 'max',
   species: 'Perro',
   breed: '',
   age: 3,
@@ -54,9 +55,10 @@ try {
     await setDoc(doc(db, 'users/disabled'), userData('disabled', 'disabled'));
     await setDoc(doc(db, 'users/other'), userData('other'));
     await setDoc(doc(db, 'users/owner/pets/max'), petData);
+    await setDoc(doc(db, 'users/owner/petNames/max'), {petIds:['max']});
     await setDoc(doc(db, 'users/other/pets/luna'), {
       ...petData,
-      name: 'Luna',
+      name: 'Luna', nameKey: 'luna',
       species: 'Gato',
     });
   });
@@ -102,9 +104,13 @@ try {
   const limits = {Perro: 30, Gato: 30, Conejo: 20, Ave: 100, 'Hámster': 5, Tortuga: 200, Pez: 100, Otro: 250};
   for (const [species, maxAge] of Object.entries(limits)) {
     const target = doc(owner, `users/owner/pets/limits-${species}`);
-    const data = {...petData, species, age: maxAge, ageMonths: 0,
+    const name = `Mascota ${species === 'Otro' ? 'Otra' : species}`;
+    const data = {...petData, name, nameKey:name.toLowerCase(), species, age: maxAge, ageMonths: 0,
       customSpecies: species === 'Otro' ? 'Hurón' : '', createdAt: serverTimestamp()};
-    await assertSucceeds(setDoc(target, data));
+    const create = writeBatch(owner);
+    create.set(target, data);
+    create.set(doc(owner, `users/owner/petNames/${data.nameKey}`), {petIds:[target.id]});
+    await assertSucceeds(create.commit());
     await assertFails(updateDoc(target, {ageMonths: 1}));
     await assertFails(updateDoc(target, {age: -1}));
     await assertFails(updateDoc(target, {age: 0, ageMonths: 12}));
@@ -114,6 +120,37 @@ try {
     await assertFails(updateDoc(target, {breed: 'a'.repeat(81)}));
     await assertFails(updateDoc(target, {description: 'a'.repeat(501)}));
   }
+
+  // No se puede saltar la reserva, apropiarse de un nombre ni liberar uno ajeno.
+  await assertFails(setDoc(doc(owner, 'users/owner/pets/duplicate'), {...petData, createdAt:serverTimestamp()}));
+  const steal = writeBatch(owner);
+  steal.set(doc(owner, 'users/owner/pets/duplicate'), {...petData, createdAt:serverTimestamp()});
+  steal.set(doc(owner, 'users/owner/petNames/max'), {petIds:['duplicate']});
+  await assertFails(steal.commit());
+  await assertFails(deleteDoc(doc(owner, 'users/owner/petNames/max')));
+  await assertFails(deleteDoc(doc(owner, 'users/owner/pets/max')));
+  await assertFails(updateDoc(doc(owner, 'users/owner/pets/max'), {name:'Toby', nameKey:'toby'}));
+  // Dos escrituras simultáneas: solo una obtiene la reserva.
+  async function compete(id) {
+    const batch = writeBatch(owner);
+    batch.set(doc(owner, `users/owner/pets/${id}`), {...petData, name:'Nube', nameKey:'nube', createdAt:serverTimestamp()});
+    batch.set(doc(owner, 'users/owner/petNames/nube'), {petIds:[id]});
+    return batch.commit();
+  }
+  const competition = await Promise.allSettled([compete('concurrent-a'), compete('concurrent-b')]);
+  if (competition.filter(r => r.status === 'fulfilled').length !== 1) throw new Error('La reserva concurrente no fue única');
+  const reservation = (await getDoc(doc(owner, 'users/owner/petNames/nube'))).data();
+  const winner = reservation.petIds[0];
+  const rename = writeBatch(owner);
+  rename.update(doc(owner, `users/owner/pets/${winner}`), {name:'Brisa', nameKey:'brisa'});
+  rename.delete(doc(owner, 'users/owner/petNames/nube'));
+  rename.set(doc(owner, 'users/owner/petNames/brisa'), {petIds:[winner]});
+  await assertSucceeds(rename.commit());
+  const remove = writeBatch(owner);
+  remove.delete(doc(owner, `users/owner/pets/${winner}`));
+  remove.delete(doc(owner, 'users/owner/petNames/brisa'));
+  await assertSucceeds(remove.commit());
+
   const schedule = doc(owner, 'users/owner/pets/max/feedingSchedules/s');
   await assertSucceeds(setDoc(schedule, {id:'s', time:'08:00', active:true, createdAt:serverTimestamp()}));
   await assertFails(setDoc(doc(owner, 'users/owner/pets/missing/feedingSchedules/s'),
