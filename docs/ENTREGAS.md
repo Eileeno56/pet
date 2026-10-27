@@ -20,7 +20,7 @@ Plazo: **27/10/2026 08:00 America/Mexico_City (14:00 UTC)**. [Seguimiento #5](ht
 | Firma | SHA-256 certificado d523fbae118f34d7b9c46064635c37d0354d21d55792e8f76836fe936b3cf57e, compatible con beta.2 | Verificada |
 | SHA-256 APK | b8433fefc3b358994ca9d7117c4f8c759264dce4620fa71df3846e4685abf804 | Digest remoto comprobado |
 | Publicación | [Release beta.3 en pet](https://github.com/Eileeno56/pet/releases/tag/v1.0.0-beta.3), 27/10/2026 07:52:47 UTC−06:00 (13:52:47 UTC); API pública y descarga HTTP 200 | Entregada antes de las 08:00 |
-| Evaluación humana | Iker y Juan José reportaron beta.1; falta Abraham y la revalidación de las versiones corregidas | Seguimiento abierto |
+| Evaluación humana | Iker y Juan José reportaron beta.1; Abraham reportó beta.2 (incorporado el 27/10 tras detectar cambios remotos); faltan sus observaciones nuevas y revalidación de beta.3 | Seguimiento abierto |
 
 **Entrega técnica publicada a tiempo y pruebas aprobadas.** El issue/hito general permanece abierto por los reportes y revalidaciones humanas pendientes; no se atribuye aprobación a los testers. No se configuró una automatización.
 
