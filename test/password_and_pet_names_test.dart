@@ -31,6 +31,7 @@ void main() {
       expect(InputValidators.passwordStrength(password), 0);
     }
     expect(InputValidators.newPassword('Luz7!mar'), isNull);
+    expect(InputValidators.newPassword('abc'), 'Usa al menos 8 caracteres.');
     expect(InputValidators.passwordStrength('Luz7!mar'), 1);
     expect(InputValidators.passwordStrength('Luna!Bosque27'), 2);
     expect(InputValidators.newPassword('Luna!Bosque27' * 11), isNotNull);

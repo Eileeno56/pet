@@ -130,6 +130,21 @@ try {
   await assertFails(deleteDoc(doc(owner, 'users/owner/petNames/max')));
   await assertFails(deleteDoc(doc(owner, 'users/owner/pets/max')));
   await assertFails(updateDoc(doc(owner, 'users/owner/pets/max'), {name:'Toby', nameKey:'toby'}));
+  // Los duplicados históricos se retiran de uno en uno sin perder el otro registro.
+  await environment.withSecurityRulesDisabled(async context => {
+    const db = context.firestore();
+    for (const id of ['legacy-a', 'legacy-b']) await setDoc(doc(db, `users/owner/pets/${id}`), {...petData, name:'Sol', nameKey:'sol'});
+    await setDoc(doc(db, 'users/owner/petNames/sol'), {petIds:['legacy-a','legacy-b']});
+  });
+  await assertFails(updateDoc(doc(owner, 'users/owner/petNames/sol'), {petIds:['legacy-a']}));
+  const legacy = writeBatch(owner);
+  legacy.update(doc(owner, 'users/owner/pets/legacy-a'), {name:'Estrella', nameKey:'estrella'});
+  legacy.update(doc(owner, 'users/owner/petNames/sol'), {petIds:['legacy-b']});
+  legacy.set(doc(owner, 'users/owner/petNames/estrella'), {petIds:['legacy-a']});
+  await assertSucceeds(legacy.commit());
+  if ((await getDoc(doc(owner, 'users/owner/pets/legacy-b'))).data().name !== 'Sol') throw new Error('Se modificó el duplicado conservado');
+  await assertFails(getDoc(doc(pendingOwner, 'users/owner/petNames/sol')));
+  await assertFails(getDoc(doc(owner, 'users/other/petNames/luna')));
   // Dos escrituras simultáneas: solo una obtiene la reserva.
   async function compete(id) {
     const batch = writeBatch(owner);
@@ -209,6 +224,8 @@ try {
   accept.set(doc(member,'users/other/careSpaces/owner'),{ownerId:'owner',ownerName:'María José',invitationId:'family'});
   await assertSucceeds(accept.commit());
   await assertSucceeds(getDoc(doc(member,'users/owner/pets/max')));
+  await assertSucceeds(getDoc(doc(member,'users/owner/petNames/max')));
+  await assertFails(setDoc(doc(member,'users/owner/pets/member-duplicate'), {...petData,createdAt:serverTimestamp()}));
   await assertSucceeds(getDocs(collection(member,'users/owner/pets')));
   await assertSucceeds(getDocs(collection(member,'users/owner/feedingHistory')));
   await assertSucceeds(updateDoc(doc(member,'users/owner/pets/max/carePlan/diet'),{dailyGrams:200}));

@@ -61,9 +61,9 @@ abstract final class InputValidators {
 
   // La política nueva solo se aplica al registro. Las cuentas antiguas conservan acceso.
   static String? newPassword(String? value) {
-    final basic = password(value);
-    if (basic != null) return basic;
-    if (value!.length < 8) return 'Usa al menos 8 caracteres.';
+    if (value == null || value.isEmpty) return 'Ingresa tu contraseña.';
+    if (value.length < 8) return 'Usa al menos 8 caracteres.';
+    if (value.length > 128) return 'Usa como máximo 128 caracteres.';
     if (!RegExp(r'[A-Z]').hasMatch(value) ||
         !RegExp(r'[a-z]').hasMatch(value) ||
         !RegExp(r'[0-9]').hasMatch(value) ||
