@@ -1,4 +1,35 @@
-# Registro de entregas — 1.0.0-beta.1+2
+# Registro de entregas
+
+## Actualización beta.2 — 26 de octubre de 2026
+
+**Plazo comprometido: 26/10/2026, 21:00, America/Mexico_City (UTC−06:00).**
+Seguimiento: [issue #4](https://github.com/Eileeno56/pet/issues/4).
+
+| Elemento | Evidencia real | Estado |
+| --- | --- | --- |
+| Código de las mejoras | Commit `dbc85b25059bff14edbcf2dcd93c6e3117a05ba4`, 26/10/2026 17:54:02 UTC−06:00; main remoto verificado | Publicado antes del plazo |
+| Versión y tag | `1.0.0-beta.2+3`; tag de código `v1.0.0-beta.2` publicado | Completado |
+| Análisis y pruebas locales | Análisis app/admin sin incidencias; 45 pruebas app, 2 admin, 8 política; 8 pruebas de mejoras repetidas tras el último ajuste de contraseñas | Aprobadas |
+| CI del código | [Ejecución 40422869858](https://github.com/Eileeno56/pet/actions/runs/40422869858), concluida correctamente | Aprobada |
+| Reglas Firestore | Pruebas en proyecto demo: acceso familiar, correo verificado, revocación, aislamiento de cuentas, plan, ficha médica e historial | Aprobadas en emulador |
+| APK definitivo | 63,876,265 bytes; SHA-256 `756768e556b610011cb71883111b4edd5d29c8dd4ff616ce75b76a0f7461d3da`; digest del archivo subido a GitHub verificado | Compilado y subido a borrador |
+| Instalación y actualización | Instalación de beta.1 y después beta.2 con `adb install -r`, ambas con resultado `Success`; Android reconoce versionCode 3 y versionName 1.0.0-beta.2 | Comprobada en Android 16 |
+| Firma | Certificado SHA-256 `d523fbae118f34d7b9c46064635c37d0354d21d55792e8f76836fe936b3cf57e`, igual al APK beta.1 distribuido | Actualización compatible |
+| Revisión visual del APK | [Captura del acceso](imagenes/beta2-login.png), texto centrado y fondo de patitas legible; sin errores fatales de Flutter/AndroidRuntime de la app en el registro capturado | Comprobada |
+| Despliegue real de Firestore | La CLI rechazó el despliegue: credenciales vencidas. Se inició `firebase login --reauth`; falta completar el acceso con la cuenta propietaria | Pendiente; no desplegado |
+| Publicación pública del instalador | Release beta.2 creada como borrador con APK y checksum; se espera el despliegue real | Pendiente |
+| Cierre y aprobación de la entrega | Faltan despliegue y publicación final | **Abierta, sin aprobación final** |
+
+El emulador presentó avisos de lentitud de Pixel Launcher y System UI durante el
+arranque; después se comprobó la pantalla de la app. La instalación y la prueba
+visual no certifican por sí solas todos los flujos en teléfonos reales. Los reportes
+de Iker y Juan José corresponden a beta.1; no se les atribuye una aprobación de beta.2.
+
+No se configuró una automatización para cerrar la entrega. El issue se cerrará
+manualmente solo después de verificar el despliegue, la publicación y su fecha real.
+
+## Registro histórico de beta.1
+
 
 Zona horaria: `America/Mexico_City` (UTC−06:00 en estas fechas).
 Fecha de preparación y validación del código de soporte beta: **20/10/2026**.

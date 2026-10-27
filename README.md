@@ -4,7 +4,8 @@ Aplicación Flutter para Android orientada a organizar la alimentación de masco
 
 ## Estado de esta entrega
 
-Versión en preparación: **1.0.0-beta.2+3**, con las correcciones y mejoras de la evaluación de Iker y Juan José.
+Código actualizado: **1.0.0-beta.2+3**, con las correcciones y mejoras de la evaluación de Iker y Juan José.
+El APK está preparado como borrador; su activación y publicación final están pendientes de renovar la sesión de Firebase para desplegar las reglas nuevas.
 Seguimiento y fecha real de publicación: [entrega de mejoras](https://github.com/Eileeno56/pet/issues/4).
 [Guía de novedades y pruebas](docs/MEJORAS_BETA2.md).
 

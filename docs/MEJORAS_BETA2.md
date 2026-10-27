@@ -42,3 +42,8 @@ el despliegue de reglas, la compilación e instalación, el SHA-256, el commit r
 y la fecha real de publicación. No se atribuye a los testers una aprobación nueva
 hasta que vuelvan a evaluar este APK. La aprobación técnica de la entrega requiere
 completar las comprobaciones y verificar que se publicó antes del plazo.
+
+
+[Ver el nuevo acceso en el APK Android](imagenes/beta2-login.png).
+
+Estado real de publicación y activación: [registro de entregas](ENTREGAS.md).
