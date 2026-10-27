@@ -2,6 +2,8 @@
 
 Aplicación Flutter para Android orientada a organizar la alimentación de mascotas.
 
+[Revisión de requisitos docentes](docs/REVISION_DOCENTE.md) · [Opiniones de testers](opiniones/README.md)
+
 ## Estado de esta entrega
 
 Código actualizado: **1.0.0-beta.2+3**, con las correcciones y mejoras de la evaluación de Iker y Juan José.
