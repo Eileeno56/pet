@@ -5,9 +5,9 @@ Estado comprobado el 27/10/2026, America/Mexico_City. Seguimiento: [issue #5](ht
 | Requisito | Evidencia | Estado |
 | --- | --- | --- |
 | Cinco o más commits | [Historial real](https://github.com/Eileeno56/pet/commits/main), 11 commits antes de esta revisión | Cumplido |
-| Varias ramas | `main`, `fix/profile-pets-admin` y `codex/tester-feedback-beta2` publicadas; conservan trabajo real | Publicadas |
-| Pull requests | Esta guía se incorpora mediante PR; las correcciones anteriores se integraron directamente en main, sin PR histórico | PR #6 y #7 integrados con CI aprobada |
-| Tags | `v1.0.0-beta.1` y `v1.0.0-beta.2` | Publicados |
+| Varias ramas | Seis ramas publicadas; función y nombre de cada una en [RAMAS.md](RAMAS.md) | Publicadas |
+| Pull requests | Esta guía se incorpora mediante PR; las correcciones anteriores se integraron directamente en main, sin PR histórico | PR #6, #7 y #10 integrados con CI aprobada |
+| Tags | `v1.0.0-beta.1`, `v1.0.0-beta.2`, `v1.0.0-beta.3` y `v1.0.0-beta.4` | Publicados |
 | Releases | [Versiones del código](https://github.com/Eileeno56/pet/releases) y [distribución Android](https://github.com/Eileeno56/app_pet/releases) | Consultar cada versión y sus archivos |
 | Tres reportes de testers | [Carpetas de opiniones](../opiniones/README.md): Iker y Juan José entregaron beta.1; Abraham entregó beta.2 | Tres reportes recibidos |
 | Correcciones | [Observación y cambio](MEJORAS_BETA2.md), [pruebas y publicación](ENTREGAS.md), [issue #4](https://github.com/Eileeno56/pet/issues/4) | Validación técnica aprobada de beta.2; revalidación humana pendiente |

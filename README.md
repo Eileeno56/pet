@@ -11,7 +11,7 @@ La app exige [confirmar el correo mediante un enlace de Firebase](docs/CONFIRMAC
 Código actualizado: **1.0.0-beta.4+5**. Registro desde 8 caracteres con mayúscula, minúscula, número y símbolo; indicador de seguridad; nombres de mascotas únicos por espacio de cuidado.
 [Guía de cambios y pruebas beta.4](docs/MEJORAS_BETA4.md) · [Ramas y su función](docs/RAMAS.md).
 Seguimiento: [issue #9](https://github.com/Eileeno56/pet/issues/9). El plazo solicitado fue el 27/10/2026 a las 10:40 America/Mexico_City; la publicación se registra con su fecha real en [ENTREGAS.md](docs/ENTREGAS.md). No se declara una entrega dentro de plazo.
-La beta.3 anterior permanece disponible en [releases](https://github.com/Eileeno56/pet/releases/tag/v1.0.0-beta.3). El APK beta.4 aparecerá en su release tras verificar la compilación y publicación.
+[Descargar APK beta.4](https://github.com/Eileeno56/pet/releases/download/v1.0.0-beta.4/PetReminder-1.0.0-beta.4.apk) · [Release y SHA256SUMS.txt](https://github.com/Eileeno56/pet/releases/tag/v1.0.0-beta.4). Publicada el **27/10/2026 11:04:36, America/Mexico_City**, fuera del plazo. Firma, versión, digest remoto y descarga pública verificados. La propietaria renombrará desde la app un registro duplicado anterior; revalidación de testers pendiente.
 
 [Distribución Android](https://github.com/Eileeno56/pet/releases).
 Este repositorio contiene el código, tags, releases e instalador Android. `Eileeno56/app_pet` conserva el historial de distribución y los reportes originales.

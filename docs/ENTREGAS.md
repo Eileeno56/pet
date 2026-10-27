@@ -1,5 +1,30 @@
 # Registro de entregas
 
+## Actualización beta.4 — 27 de octubre de 2026
+
+Plazo: **27/10/2026 10:40 America/Mexico_City (16:40 UTC)**. [Seguimiento #9](https://github.com/Eileeno56/pet/issues/9).
+
+| Elemento | Evidencia | Estado |
+| --- | --- | --- |
+| Código | Main `39689dd22db3671c4c29f470b06c4f4e2d35880e`; [PR #10](https://github.com/Eileeno56/pet/pull/10) integrado; cinco commits de implementación, pruebas y documentación | Publicado |
+| Tag y ramas | `v1.0.0-beta.4`; seis ramas remotas, funciones en [RAMAS.md](RAMAS.md) | Publicados |
+| Pruebas app | 55 pruebas Flutter aprobadas; análisis de lib/test sin incidencias; cuatro casos dirigidos repetidos tras el mensaje final del mínimo | Aprobadas |
+| CI del código | [40545584589](https://github.com/Eileeno56/pet/actions/runs/40545584589), head a25e977; [40545962611](https://github.com/Eileeno56/pet/actions/runs/40545962611), main 39689dd22db3671c4c29f470b06c4f4e2d35880e; incluye app/admin y política beta | Success |
+| Política real Auth | 8–128 caracteres, mayúscula, minúscula, número y símbolo; siete contraseñas fuera de política rechazadas; registro de ocho caracteres válido aceptado | Verificada; cuenta temporal eliminada, sin enviar mensajes |
+| Indicador | Rojo Poco seguro, amarillo Seguro, verde Muy seguro; texto accesible y pruebas de los tres colores | Aprobado; estimación orientativa |
+| Reglas y concurrencia | Reserva obligatoria, apropiación/omisión rechazadas; dos escrituras simultáneas: una aprobada; renombrado, borrado, aislamiento y cuidado compartido; casos de duplicados históricos | Aprobadas en emulador; reglas desplegadas |
+| Migración | Diez mascotas, nueve reservas; un grupo duplicado anterior conservado. La propietaria eligió renombrar uno desde la app nueva; no se borraron ni renombraron datos personales | Aplicada; decisión de nombres pendiente de propietaria |
+| Plan y correo | Continúa Spark y confirmación por enlace de Firebase; las cuentas antiguas conservan acceso | Sin activar Blaze |
+| APK | 1.0.0-beta.4, versionCode 5, API 24–36, universal, 63,958,205 bytes; build final release correcto | Compilado y metadatos comprobados |
+| Firma | Certificado SHA-256 `d523fbae118f34d7b9c46064635c37d0354d21d55792e8f76836fe936b3cf57e`, igual a beta.3 | Verificada |
+| SHA-256 APK | `fb31b2bdb1d3966e0be8c227c749822020ca25c3c9568843c96b18357b21e4fa` | Coincide con digest remoto |
+| Publicación | [Release beta.4](https://github.com/Eileeno56/pet/releases/tag/v1.0.0-beta.4), **27/10/2026 11:04:36 UTC−06:00** (2026-10-27T17:04:36Z); APK y SHA256SUMS.txt públicos; descarga HTTP 200 | **Publicada fuera del plazo** |
+| Revalidación humana | La nueva versión debe ser revisada por los testers; no se atribuye aprobación a los participantes | Pendiente |
+
+**Implementación y publicación técnica completadas; entrega fuera del plazo de las 10:40.** El issue #9 permanece abierto por el renombrado que realizará la propietaria y la revalidación humana. No se declara aprobación dentro de plazo. No se configuró una automatización.
+
+No hubo una nueva instalación ni prueba completa en teléfono físico: se comprobaron build, versión, firma, digest, descarga, pruebas de app/reglas y política real de Firebase. La firma compatible y el versionCode creciente permiten actualizar las betas anteriores con la misma firma. Las versiones anteriores deben actualizarse para crear, renombrar o borrar mascotas con las reservas nuevas. [Guía de cambios y pruebas](MEJORAS_BETA4.md).
+
 ## Actualización beta.3 — 27 de octubre de 2026
 
 Plazo: **27/10/2026 08:00 America/Mexico_City (14:00 UTC)**. [Seguimiento #5](https://github.com/Eileeno56/pet/issues/5).

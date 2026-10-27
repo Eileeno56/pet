@@ -11,4 +11,4 @@ Cada rama conserva una línea de trabajo; no representa una sección distinta de
 | codex/email-code-verification | Confirmación obligatoria del correo. Aunque el nombre conserva el enfoque inicial de códigos, el cambio final usa un enlace de Firebase en Spark; integrada mediante PR #7. |
 | codex/password-strength-pet-names | Registro desde 8 caracteres, indicador de seguridad y nombres únicos de mascotas por espacio; entrega beta.4, issue #9. |
 
-La última fila solo cuenta como rama remota cuando aparece en [las ramas publicadas](https://github.com/Eileeno56/pet/branches). Las ramas integradas se conservan como evidencia del trabajo.
+Se comprobaron estas seis [ramas publicadas](https://github.com/Eileeno56/pet/branches) el 27/10/2026. Las ramas integradas se conservan como evidencia del trabajo; beta.4 se integró mediante PR #10.
