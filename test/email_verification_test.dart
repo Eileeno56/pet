@@ -1,4 +1,3 @@
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -24,8 +23,6 @@ class MockAuth extends Mock implements FirebaseAuth {}
 
 class MockUser extends Mock implements User {}
 
-class MockFunctions extends Mock implements FirebaseFunctions {}
-
 void main() {
   test('unverified session cannot activate data providers', () async {
     final container = ProviderContainer(
@@ -41,9 +38,10 @@ void main() {
     expect(container.read(currentUserIdProvider), isNull);
   });
   testWidgets(
-    'deep links require verification and short codes never call server',
+    'deep links remain blocked when email confirmation is still pending',
     (tester) async {
       final service = MockVerification();
+      when(() => service.refresh()).thenAnswer((_) async => false);
       final container = ProviderContainer(
         overrides: [
           authStateChangesProvider.overrideWith(
@@ -72,12 +70,15 @@ void main() {
         await tester.pumpAndSettle();
         expect(router.routeInformationProvider.value.uri.path, '/verify-email');
       }
-      await tester.enterText(find.byType(TextFormField), '1234');
-      await tester.ensureVisible(find.text('Confirmar correo'));
-      await tester.tap(find.text('Confirmar correo'));
+      await tester.ensureVisible(find.text('Ya confirmé mi correo'));
+      await tester.tap(find.text('Ya confirmé mi correo'));
       await tester.pumpAndSettle();
-      expect(find.text('Escribe los 5 dígitos.'), findsOneWidget);
-      verifyNever(() => service.verify(any()));
+      expect(
+        find.textContaining('Tu correo aún no está confirmado.'),
+        findsOneWidget,
+      );
+      expect(router.routeInformationProvider.value.uri.path, '/verify-email');
+      verify(() => service.refresh()).called(1);
     },
   );
   testWidgets(
@@ -98,10 +99,10 @@ void main() {
       );
       await tester.pumpAndSettle();
       verifyNever(() => service.send());
-      await tester.tap(find.text('Enviar código al correo'));
+      await tester.tap(find.text('Enviar enlace de confirmación'));
       await tester.pumpAndSettle();
       verify(() => service.send()).called(1);
-      expect(find.textContaining('Código enviado.'), findsOneWidget);
+      expect(find.textContaining('Enlace enviado.'), findsOneWidget);
       final button = tester.widget<OutlinedButton>(find.byType(OutlinedButton));
       expect(button.onPressed, isNull);
       await tester.pumpWidget(const SizedBox());
@@ -117,8 +118,33 @@ void main() {
         () => user.getIdToken(true),
       ).thenAnswer((_) async => 'fresh-test-token');
       when(() => user.reload()).thenAnswer((_) async {});
-      await EmailVerificationService(auth, MockFunctions()).refresh();
+      when(() => user.emailVerified).thenReturn(true);
+      expect(await EmailVerificationService(auth).refresh(), isTrue);
       verifyInOrder([() => user.getIdToken(true), () => user.reload()]);
     },
   );
+  test(
+    'verification message uses the current Firebase user and Spanish language',
+    () async {
+      final auth = MockAuth();
+      final user = MockUser();
+      when(() => auth.currentUser).thenReturn(user);
+      when(() => user.emailVerified).thenReturn(false);
+      when(() => auth.setLanguageCode('es')).thenAnswer((_) async {});
+      when(() => user.sendEmailVerification()).thenAnswer((_) async {});
+      await EmailVerificationService(auth).send();
+      verifyInOrder([
+        () => auth.setLanguageCode('es'),
+        () => user.sendEmailVerification(),
+      ]);
+    },
+  );
+  test('verified users do not send additional messages', () async {
+    final auth = MockAuth();
+    final user = MockUser();
+    when(() => auth.currentUser).thenReturn(user);
+    when(() => user.emailVerified).thenReturn(true);
+    await EmailVerificationService(auth).send();
+    verifyNever(() => user.sendEmailVerification());
+  });
 }

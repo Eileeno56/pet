@@ -1,37 +1,33 @@
-# Confirmación de correo con código
+# Confirmación de correo con Firebase
 
-Solicitud del 27/10/2026. Plazo: **27/10/2026 08:00 America/Mexico_City (14:00 UTC)**. Seguimiento: [issue #5](https://github.com/Eileeno56/pet/issues/5).
+Plazo: **27/10/2026 08:00 America/Mexico_City (14:00 UTC)**. Seguimiento: [issue #5](https://github.com/Eileeno56/pet/issues/5).
 
-## Estado
+## Decisión y costo
 
-Implementación en preparación; no se presenta como servicio activo hasta desplegar y verificar el envío real. El APK público beta.2 no incluye este flujo. El servidor nuevo necesita Blaze y las credenciales de envío autorizadas por la propietaria. No se guarda una contraseña de Gmail en Git ni en el APK.
+La propietaria eligió el enlace de verificación de Firebase Authentication para conservar Spark, sin activar Blaze. La alternativa anterior de cinco dígitos con Cloud Functions fue retirada antes de desplegarse. No se necesita un servidor propio, SMTP, contraseña de aplicación de Gmail ni secretos de envío.
 
-## Funcionamiento
+Firebase permite correos de verificación en Spark dentro de sus [límites oficiales](https://firebase.google.com/docs/auth/limits). El envío de verificación de dirección es distinto del inicio de sesión sin contraseña por enlace; la app mantiene correo/contraseña o Google.
 
-1. La cuenta se crea en Firebase Authentication con una contraseña nueva de 15–128 caracteres. El mínimo y máximo también están activados en el servidor de Firebase; una prueba REST real con seis caracteres fue rechazada con `PASSWORD_DOES_NOT_MEET_REQUIREMENTS` el 27/10/2026. Las cuentas antiguas conservan sus contraseñas; no se forzó un cambio masivo al iniciar sesión. Hasta confirmar su correo no puede abrir las pantallas de mascotas, historial, perfil ni administración en la versión nueva.
-2. «Enviar código» llama al servidor autenticado. El destinatario se obtiene de Firebase Auth, nunca de un correo arbitrario enviado por el cliente.
-3. El servidor genera cinco dígitos con un generador criptográfico, incluidos ceros iniciales, y envía el código desde la cuenta Gmail configurada.
-4. El código vence en 10 minutos. Se permiten cinco intentos por código y diez por hora por cuenta. Un reenvío requiere 60 segundos, invalida el anterior y no reinicia el límite horario de intentos.
-5. Solo el servidor guarda el HMAC del código. Las colecciones privadas y los límites no tienen permisos para clientes. El código no se devuelve en la API ni se registra en logs.
-6. Si coincide, el servidor confirma en Auth la dirección exacta que se probó. La app renueva los claims y recarga al usuario antes de abrir las suscripciones a datos.
+## Flujo de la app
 
-Las reglas también requieren `email_verified` para operar con mascotas y cuidados, incluidos los accesos administrativos. El documento mínimo de cuenta puede crearse y leerse por su dueño antes de la confirmación; los datos de mascotas y cuidados permanecen bloqueados. Las cuentas anteriores sin correo verificado deben confirmarlo al instalar la nueva versión. Google solo permite pasar si Firebase informa que el correo ya está verificado.
+1. Registrarse con nombre válido, correo y contraseña nueva de 15–128 caracteres. Las contraseñas antiguas conservan acceso; las cuentas que todavía no verificaron el correo también deben confirmarlo.
+2. La app muestra «Confirma tu correo» y bloquea Inicio, Historial, Perfil, cuidados y administración. El documento mínimo de cuenta puede crearse/leerse por su dueño, pero no se permiten datos de mascotas o cuidados.
+3. Pulsar «Enviar enlace de confirmación». Firebase lo envía al correo de la cuenta autenticada, sin aceptar un destinatario arbitrario de un formulario. El mensaje usa la configuración del proyecto Firebase, no la contraseña personal de Gmail. Revisar spam.
+4. Abrir el enlace del mensaje y regresar a la app. Pulsar «Ya confirmé mi correo». La app también comprueba al volver al primer plano; renueva los claims y recarga al usuario antes de abrir sus datos.
+5. Si no se confirmó, se mantiene bloqueada. Se puede reenviar después de 60 segundos, con límites adicionales de Firebase, o salir para usar otra dirección. Los enlaces caducados o ya utilizados se gestionan en la página de Firebase; solicitar uno nuevo si es necesario.
 
-Confirmar un código prueba que la persona puede recibir mensajes en esa dirección; no certifica su nombre real ni impide usar un buzón temporal. No se afirma poder identificar cualquier dato personal inventado.
+Google puede informar que un correo ya fue verificado: en ese caso no se exige otra confirmación. No se marca un correo como confirmado desde el cliente ni se añaden excepciones por nombre/dominio.
 
-## Configuración por la propietaria
+Confirmar el enlace demuestra que se puede recibir mensajes en esa dirección. No prueba el nombre real ni impide buzones temporales; no se afirma identificar cualquier dato personal inventado.
 
-1. Activar Blaze en `petreminder-user-2026`, revisando el uso y la facturación de Google Cloud. Esta activación no la realiza el código del proyecto.
-2. En la cuenta Gmail remitente activar la verificación en dos pasos y crear una contraseña de aplicación. La contraseña habitual no se utiliza.
-3. Ejecutar `powershell -NoProfile -ExecutionPolicy Bypass -File tools/configure-email-secrets.ps1` desde este repositorio. Introducir la contraseña de aplicación solo en el campo oculto de la CLI. El script guarda `GMAIL_APP_PASSWORD` y genera `EMAIL_CODE_HASH_KEY` directamente para Secret Manager. Volver a ejecutarlo rota la clave y deja inválidos los códigos anteriores.
-4. Instalar dependencias con `npm ci --prefix functions`, ejecutar `npm --prefix functions run check` y `npm --prefix functions test`.
-5. Desplegar primero el servidor: `firebase deploy --config firebase.deploy.json --project petreminder-user-2026 --only functions:email-verification`. No desplegar reglas que bloqueen cuentas antes de comprobar que el envío y el APK nuevo funcionan.
-6. Probar con una cuenta de la propietaria: recepción real, código incorrecto, código correcto, actualización de claims y acceso. Desplegar las reglas verificadas con `--only firestore:rules` y publicar el APK nuevo. Mantener el issue abierto si falla o falta cualquier paso.
+## Seguridad y comprobación
 
-Los límites iniciales del servidor son cinco envíos/hora y diez/día por cuenta, veinte/hora por IP y cien/día globales; máximo dos instancias y tiempo de ejecución de 30 segundos. Reducen abuso, pero no son un tope de facturación. Firebase Authentication sigue controlando las credenciales y sus límites propios.
+Las reglas requieren `email_verified` para usar mascotas, horarios, registros médicos, alimento y cuidado familiar, incluyendo accesos administrativos. La política de longitud de contraseñas nuevas está activada en Firebase: una prueba REST real con seis caracteres fue rechazada con `PASSWORD_DOES_NOT_MEET_REQUIREMENTS` el 27/10/2026.
 
-## Pruebas y entrega
+Pruebas Flutter: rutas protegidas y suscripciones bloqueadas, envío al usuario autenticado, espera de reenvío, error si el correo sigue pendiente y renovación de claims. Las pruebas de reglas verifican denegación a cuentas sin correo confirmado y acceso normal a las verificadas.
 
-La suite Node cubre destinatario vinculado a la cuenta, hash sin código expuesto, caducidad, reenvío, errores SMTP, intentos persistentes y límites. Las pruebas Flutter cubren bloqueo de rutas, validación de cinco dígitos, reenvío y renovación de tokens. El emulador de reglas comprueba denegación de acceso a cuentas sin verificar y a las colecciones privadas.
+La prueba de recepción real debe realizarse con un correo controlado por la propietaria: recibir mensaje, pulsar enlace y confirmar que Firebase devuelve `emailVerified: true`. Las fechas, pruebas, CI, commit, build, firma y hash del APK se registran en [ENTREGAS.md](ENTREGAS.md) y en el issue. No atribuir a los testers aprobación de una versión que aún no revisaron.
 
-Registrar en el issue el resultado real de cada prueba, despliegue, commit, APK, checksum y fecha. La revalidación de los tres testers debe recibirse de ellos; no se sustituye con pruebas automáticas.
+## Despliegue
+
+Usar `firebase deploy --config firebase.deploy.json --project petreminder-user-2026 --only firestore:rules` después de probar el flujo y preparar el APK. No se despliegan funciones ni se habilita facturación. Publicar el APK y comprobarlo, registrar fechas reales y mantener el seguimiento abierto si falta recepción real, pruebas o revisión de testers.

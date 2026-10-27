@@ -2,13 +2,13 @@
 
 ## [1.0.0-beta.3] — en preparación
 
-- Añade confirmación obligatoria del correo mediante código aleatorio de cinco dígitos validado en servidor.
-- Bloquea rutas y acceso a datos de mascotas/cuidados para cuentas sin correo verificado.
-- Añade caducidad, límites de intentos y reenvíos, hash privado y credenciales de envío en Secret Manager.
-- Renueva los claims de autenticación antes de abrir los datos confirmados.
+- Exige confirmar el correo mediante el enlace de Firebase Authentication antes de abrir los datos de la app.
+- Bloquea rutas y acceso a mascotas/cuidados para cuentas sin correo verificado, también en las reglas.
+- Permite reenviar el enlace con espera de 60 segundos y comprobar la confirmación al volver del correo.
+- Renueva los claims antes de abrir las suscripciones de datos.
 - Activa en Firebase el rango de 15–128 caracteres para contraseñas nuevas; conserva acceso de cuentas anteriores.
-- Añade pruebas de códigos, concurrencia, rutas y reglas; incorpora evidencias docentes y reportes identificados en pet.
-- La publicación de esta versión depende de activar y verificar el envío real. Consultar issue #5.
+- Mantiene Spark: no usa Cloud Functions, SMTP propio ni contraseña de Gmail.
+- Incorpora pruebas y evidencias docentes en pet. La recepción real y publicación se registran en el issue #5.
 
 ## [1.0.0-beta.2] — 2026-10-26
 
