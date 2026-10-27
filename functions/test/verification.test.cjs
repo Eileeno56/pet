@@ -12,6 +12,7 @@ function setup() {
     ['v', { email: 'other@example.com', emailVerified: false }],
   ]);
   let failMail = false;
+  let failNextUpdate = false;
   const sent = [];
   const db = { doc: path => path, runTransaction: async action => {
     const writes = [];
@@ -21,11 +22,15 @@ function setup() {
     return result;
   } };
   const service = createVerificationService({ db,
-    auth: { getUser: async uid => users.get(uid), updateUser: async (uid, change) => Object.assign(users.get(uid), change) },
+    auth: { getUser: async uid => users.get(uid), updateUser: async (uid, change) => {
+      if (failNextUpdate) { failNextUpdate = false; throw Error('Temporary Admin Auth failure'); }
+      return Object.assign(users.get(uid), change);
+    } },
     mail: async message => { if (failMail) throw Error('SMTP secret error'); sent.push(message); },
     secret: 'test-only-private-secret-0123456789', now: () => time, generateCode: () => code });
   return { ...service, records, users, sent, tick: ms => time += ms,
-    code: value => code = value, failMail: () => failMail = true };
+    code: value => code = value, failMail: () => failMail = true,
+    failNextUpdate: () => failNextUpdate = true };
 }
 const rejects = (promise, code) => assert.rejects(promise, error => error.code === code);
 
@@ -110,4 +115,14 @@ test('IP quota spans different authenticated accounts and account daily quota pe
   const daily = setup();
   for (let n = 0; n < 10; n++) { await daily.send('u', 'ip'); daily.tick(3_600_000); }
   await rejects(daily.send('u', 'ip'), 'resource-exhausted');
+});
+test('a correct final attempt can retry a transient Auth failure without losing accepted proof', async () => {
+  const s = setup(); await s.send('u', 'ip');
+  for (let n = 0; n < 4; n++) await rejects(s.verify('u', '99999'), 'invalid-argument');
+  s.failNextUpdate();
+  await assert.rejects(s.verify('u', '01234'));
+  assert.equal(s.records.get('emailVerificationPrivate/u').attempts, 5);
+  assert.equal(s.users.get('u').emailVerified, false);
+  await s.verify('u', '01234');
+  assert.equal(s.users.get('u').emailVerified, true);
 });
