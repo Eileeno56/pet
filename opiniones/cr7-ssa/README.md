@@ -13,7 +13,7 @@ Estado: Completado
 - Fecha de la prueba o revisión: 26 de octubre de 2026
 - Dispositivo y versión de Android: POCO X6 Pro 5G / Android 14 (Xiaomi HyperOS)
 - Versión de la aplicación: PetReminder 1.0.0-beta.2
-- Funciones revisadas: 
+- Funciones revisadas:
   * Inicio de sesión y autenticación (Registro con correo y contraseña, inicio de sesión mediante Google OAuth).
   * Gestión y filtrado de historial de comidas/alimentación por fechas y estados (Pendiente, Realizada).
   * Módulo "Cuidado en familia" (Envío de invitaciones a familiares por correo electrónico).

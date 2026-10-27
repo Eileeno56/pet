@@ -18,7 +18,7 @@ Estado comprobado el 27/10/2026, America/Mexico_City. Seguimiento: [issue #5](ht
 
 Cada participante debe probar el APK nuevo, indicar versión/dispositivo/fecha, repetir los casos observados y adjuntar el resultado real. No basta con que exista su carpeta o con que las pruebas automáticas pasen. Las copias de reportes de beta.1 conservan su contenido, incluso el encabezado antiguo de estado pendiente; se enlazan a los originales para comprobar su procedencia.
 
-| Participante | Reporte beta.1 | Revalidación beta.2 o posterior |
+| Participante | Reporte recibido | Revalidación beta.2 o posterior |
 | --- | --- | --- |
 | Iker / IKLEN10 | Recibido con observaciones | Pendiente del tester |
 | Juan José / juanse-create | Recibido con observaciones | Pendiente del tester |
