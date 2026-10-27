@@ -27,6 +27,8 @@ class MockAuth extends Mock implements FirebaseAuth {}
 
 class FakeUser extends Fake implements User {
   @override
+  bool get emailVerified => true;
+  @override
   String get uid => 'u';
   @override
   String? get displayName => 'María Pérez';

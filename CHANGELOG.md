@@ -1,5 +1,15 @@
 # Historial de cambios
 
+## [1.0.0-beta.3] — en preparación
+
+- Exige confirmar el correo mediante el enlace de Firebase Authentication antes de abrir los datos de la app.
+- Bloquea rutas y acceso a mascotas/cuidados para cuentas sin correo verificado, también en las reglas.
+- Permite reenviar el enlace con espera de 60 segundos y comprobar la confirmación al volver del correo.
+- Renueva los claims antes de abrir las suscripciones de datos.
+- Activa en Firebase el rango de 15–128 caracteres para contraseñas nuevas; conserva acceso de cuentas anteriores.
+- Mantiene Spark: no usa Cloud Functions, SMTP propio ni contraseña de Gmail.
+- Incorpora pruebas y evidencias docentes en pet. La recepción real y publicación se registran en el issue #5.
+
 ## [1.0.0-beta.2] — 2026-10-26
 
 - Corrige la carga indefinida de autenticación y añade recuperación de sesión.

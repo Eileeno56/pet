@@ -1,7 +1,7 @@
 name: Validación del código
 on:
   push:
-    branches: [main, 'feat/**', 'fix/**', 'docs/**', 'test/**', 'chore/**']
+    branches: [main, 'codex/**', 'feat/**', 'fix/**', 'docs/**', 'test/**', 'chore/**']
   pull_request:
   workflow_dispatch:
 permissions:

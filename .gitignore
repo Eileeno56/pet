@@ -47,6 +47,10 @@ app.*.map.json
 # Local configuration, credentials and distributable binaries
 .env
 .env.*
+functions/.secret.local
+functions/.runtimeconfig.json
+firebase-debug.log
+firestore-debug.log
 !.env.example
 *.pem
 *.p12

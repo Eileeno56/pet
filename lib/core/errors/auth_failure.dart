@@ -14,7 +14,7 @@ class AuthFailure implements Exception {
         'No fue posible iniciar sesión. Revisa tus datos e inténtalo de nuevo.',
       'email-already-in-use' =>
         'Ya existe una cuenta registrada con ese correo.',
-      'weak-password' =>
+      'weak-password' || 'password-does-not-meet-requirements' =>
         'La contraseña no cumple los requisitos. Usa una frase larga y única.',
       'user-disabled' => 'Esta cuenta se encuentra deshabilitada.',
       'operation-not-allowed' => 'Este método de acceso no está habilitado.',

@@ -62,14 +62,27 @@ try {
   });
 
   const guest = environment.unauthenticatedContext().firestore();
+  const pendingOwner = environment.authenticatedContext('owner', {
+    email: 'owner@example.com', email_verified: false,
+  }).firestore();
+  const pendingAdmin = environment.authenticatedContext('admin', {
+    admin: true, email: 'admin@example.com', email_verified: false,
+  }).firestore();
+  await assertFails(getDoc(doc(pendingOwner, 'users/owner/pets/max')));
+  await assertFails(getDocs(collection(pendingOwner, 'users/owner/pets')));
+  await assertFails(setDoc(doc(pendingOwner, 'users/owner/pets/blocked'), petData));
+  await assertFails(getDoc(doc(pendingAdmin, 'users/owner')));
+  await assertFails(getDoc(doc(pendingOwner, 'emailVerificationPrivate/owner')));
+  await assertFails(setDoc(doc(pendingOwner, 'emailVerificationPrivate/owner'), { code: '12345' }));
+  await assertFails(getDoc(doc(pendingOwner, 'emailVerificationLimits/global')));
   const owner = environment
-    .authenticatedContext('owner', { email: 'owner@example.com' })
+    .authenticatedContext('owner', { email: 'owner@example.com', email_verified: true })
     .firestore();
   const disabled = environment
-    .authenticatedContext('disabled', { email: 'disabled@example.com' })
+    .authenticatedContext('disabled', { email: 'disabled@example.com', email_verified: true })
     .firestore();
   const admin = environment
-    .authenticatedContext('admin', { admin: true, email: 'admin@example.com' })
+    .authenticatedContext('admin', { admin: true, email: 'admin@example.com', email_verified: true })
     .firestore();
 
   await assertFails(getDoc(doc(guest, 'users/owner')));

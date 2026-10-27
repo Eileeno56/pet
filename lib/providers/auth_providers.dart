@@ -31,7 +31,10 @@ final authStateChangesProvider = StreamProvider<User?>((ref) {
 // Los datos y permisos se suscriben a la identidad, no a cada edición del perfil.
 final currentUserIdProvider = Provider<String?>((ref) {
   return ref.watch(
-    authStateChangesProvider.select((state) => state.value?.uid),
+    authStateChangesProvider.select((state) {
+      final user = state.value;
+      return user?.emailVerified == true ? user!.uid : null;
+    }),
   );
 });
 

@@ -11,8 +11,8 @@ Estado comprobado el 27/10/2026, America/Mexico_City. Seguimiento: [issue #5](ht
 | Releases | [Versiones del código](https://github.com/Eileeno56/pet/releases) y [distribución Android](https://github.com/Eileeno56/app_pet/releases) | Consultar cada versión y sus archivos |
 | Tres reportes de testers | [Carpetas de opiniones](../opiniones/README.md): Iker y Juan José entregaron; Abraham pendiente | Incompleto |
 | Correcciones | [Observación y cambio](MEJORAS_BETA2.md), [pruebas y publicación](ENTREGAS.md), [issue #4](https://github.com/Eileeno56/pet/issues/4) | Validación técnica aprobada de beta.2; revalidación humana pendiente |
-| Correo confirmado | Beta.2 comprueba credenciales pero no exige verificar el correo para usar la app | Pendiente en issue #5 |
-| Contraseñas | Registro beta.2: 15–128 caracteres y rechazo de ciertos patrones; acceso de cuentas antiguas conservado | No se afirma una política de servidor que no se haya configurado |
+| Correo confirmado | Beta.2 comprueba credenciales; el enlace de Firebase y bloqueo obligatorio se preparan para beta.3, conservando Spark | Activación pendiente en issue #5 |
+| Contraseñas | Registro: 15–128 caracteres y rechazo de ciertos patrones; acceso de cuentas antiguas conservado. Política de longitud activada en Firebase el 27/10/2026; prueba REST de contraseña de seis caracteres rechazada | Servidor y cliente verificados para registros nuevos |
 
 ## Revalidación que deben entregar los testers
 
@@ -24,4 +24,4 @@ Cada participante debe probar el APK nuevo, indicar versión/dispositivo/fecha, 
 | Juan José / juanse-create | Recibido con observaciones | Pendiente del tester |
 | Abraham / cr7-ssa | Pendiente | Pendiente del tester |
 
-No se inventan opiniones, aprobaciones, fechas anteriores ni pull requests retroactivos. La entrega del 26/10/2026 corresponde a beta.2; la solicitud de correo con código es una entrega nueva.
+No se inventan opiniones, aprobaciones, fechas anteriores ni pull requests retroactivos. La entrega del 26/10/2026 corresponde a beta.2; la confirmación obligatoria de correo es una entrega nueva; la propietaria eligió enlace de Firebase para mantener Spark.
