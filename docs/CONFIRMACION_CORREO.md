@@ -12,7 +12,7 @@ Firebase permite correos de verificación en Spark dentro de sus [límites ofici
 
 ## Flujo de la app
 
-1. Registrarse con nombre válido, correo y contraseña nueva de 15–128 caracteres. Las contraseñas antiguas conservan acceso; las cuentas que todavía no verificaron el correo también deben confirmarlo.
+1. Registrarse con nombre válido, correo y contraseña nueva de 8–128 caracteres con mayúscula, minúscula, número y símbolo (beta.4). Las contraseñas antiguas conservan acceso; las cuentas que todavía no verificaron el correo también deben confirmarlo.
 2. La app muestra «Confirma tu correo» y bloquea Inicio, Historial, Perfil, cuidados y administración. El documento mínimo de cuenta puede crearse/leerse por su dueño, pero no se permiten datos de mascotas o cuidados.
 3. Pulsar «Enviar enlace de confirmación». Firebase lo envía al correo de la cuenta autenticada, sin aceptar un destinatario arbitrario de un formulario. El mensaje usa la configuración del proyecto Firebase, no la contraseña personal de Gmail. Revisar spam.
 4. Abrir el enlace del mensaje y regresar a la app. Pulsar «Ya confirmé mi correo». La app también comprueba al volver al primer plano; renueva los claims y recarga al usuario antes de abrir sus datos.

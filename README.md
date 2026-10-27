@@ -4,15 +4,14 @@ Aplicación Flutter para Android orientada a organizar la alimentación de masco
 
 [Revisión de requisitos docentes](docs/REVISION_DOCENTE.md) · [Opiniones de testers](opiniones/README.md)
 
-La beta.3 incorpora [confirmación obligatoria del correo mediante enlace de Firebase](docs/CONFIRMACION_CORREO.md). La verificación del envío y la publicación de beta.3 están registradas en el [issue #5](https://github.com/Eileeno56/pet/issues/5); el APK beta.2 publicado abajo conserva su comportamiento original.
+La app exige [confirmar el correo mediante un enlace de Firebase](docs/CONFIRMACION_CORREO.md), sin activar facturación.
 
 ## Estado de esta entrega
 
-Código actualizado: **1.0.0-beta.3+4**, con las correcciones y mejoras de la evaluación de Iker y Juan José.
-APK publicado el **27/10/2026 a las 07:52:47, America/Mexico_City**, antes del plazo de las 08:00. Las reglas nuevas de Firebase están desplegadas.
-[Descargar APK beta.3](https://github.com/Eileeno56/pet/releases/download/v1.0.0-beta.3/PetReminder-1.0.0-beta.3.apk).
-Seguimiento y fecha real de publicación: [entrega de mejoras](https://github.com/Eileeno56/pet/issues/5).
-[Guía de novedades y pruebas](docs/MEJORAS_BETA2.md).
+Código actualizado: **1.0.0-beta.4+5**. Registro desde 8 caracteres con mayúscula, minúscula, número y símbolo; indicador de seguridad; nombres de mascotas únicos por espacio de cuidado.
+[Guía de cambios y pruebas beta.4](docs/MEJORAS_BETA4.md) · [Ramas y su función](docs/RAMAS.md).
+Seguimiento: [issue #9](https://github.com/Eileeno56/pet/issues/9). El plazo solicitado fue el 27/10/2026 a las 10:40 America/Mexico_City; la publicación se registra con su fecha real en [ENTREGAS.md](docs/ENTREGAS.md). No se declara una entrega dentro de plazo.
+La beta.3 anterior permanece disponible en [releases](https://github.com/Eileeno56/pet/releases/tag/v1.0.0-beta.3). El APK beta.4 aparecerá en su release tras verificar la compilación y publicación.
 
 [Distribución Android](https://github.com/Eileeno56/pet/releases).
 Este repositorio contiene el código, tags, releases e instalador Android. `Eileeno56/app_pet` conserva el historial de distribución y los reportes originales.
@@ -59,7 +58,7 @@ módulos sin perder los documentos antiguos, que se leen con cero meses.
 | Raza manual | 2–80 caracteres; opcional para especie manual |
 | Descripción | 0–500 caracteres |
 | Meses adicionales | 0–11 |
-| Contraseña de registro nueva | 15–128 caracteres; admite frases y espacios |
+| Contraseña de registro nueva | 8–128 caracteres; mayúscula, minúscula, número y símbolo |
 | Edad total de Perro / Gato | 0–30 años |
 | Conejo / Ave / Hámster | 0–20 / 0–100 / 0–5 años |
 | Tortuga / Pez / Otro | 0–200 / 0–100 / 0–250 años |

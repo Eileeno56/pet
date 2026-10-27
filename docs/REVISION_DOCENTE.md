@@ -12,7 +12,7 @@ Estado comprobado el 27/10/2026, America/Mexico_City. Seguimiento: [issue #5](ht
 | Tres reportes de testers | [Carpetas de opiniones](../opiniones/README.md): Iker y Juan José entregaron beta.1; Abraham entregó beta.2 | Tres reportes recibidos |
 | Correcciones | [Observación y cambio](MEJORAS_BETA2.md), [pruebas y publicación](ENTREGAS.md), [issue #4](https://github.com/Eileeno56/pet/issues/4) | Validación técnica aprobada de beta.2; revalidación humana pendiente |
 | Correo confirmado | Beta.2 comprueba credenciales; beta.3 exige el enlace de Firebase y bloquea datos hasta confirmar, conservando Spark | Publicado y probado en issue #5; HTTP 403 sin claim verificado y 200 con sesión renovada |
-| Contraseñas | Registro: 15–128 caracteres y rechazo de ciertos patrones; acceso de cuentas antiguas conservado. Política de longitud activada en Firebase el 27/10/2026; prueba REST de contraseña de seis caracteres rechazada | Servidor y cliente verificados para registros nuevos |
+| Contraseñas | Registro beta.4: 8–128 caracteres con mayúscula, minúscula, número y símbolo; acceso de cuentas antiguas conservado. Firebase rechazó siete contraseñas que incumplían la política y aceptó ocho caracteres con composición. Detalles en issue #9 | Servidor y cliente verificados para registros nuevos |
 
 ## Revalidación que deben entregar los testers
 
@@ -25,3 +25,5 @@ Cada participante debe probar el APK nuevo, indicar versión/dispositivo/fecha, 
 | Abraham / cr7-ssa | Reporte recibido sobre beta.2 | Beta.3 pendiente; observaciones nuevas de historial y cierre de sesión por revisar |
 
 No se inventan opiniones, aprobaciones, fechas anteriores ni pull requests retroactivos. La entrega del 26/10/2026 corresponde a beta.2; la confirmación obligatoria de correo es una entrega nueva; la propietaria eligió enlace de Firebase para mantener Spark.
+
+Guía de las ramas actuales: [RAMAS.md](RAMAS.md). La última actualización se sigue en el [issue #9](https://github.com/Eileeno56/pet/issues/9); consultar la publicación y pendientes en ENTREGAS.md.
