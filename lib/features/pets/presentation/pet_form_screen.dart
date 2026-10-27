@@ -75,6 +75,7 @@ class _PetFormScreenState extends ConsumerState<PetFormScreen> {
   @override
   Widget build(BuildContext context) {
     final operation = ref.watch(petControllerProvider);
+    final pets = ref.watch(petsProvider).value ?? const <Pet>[];
     final existingPhoto = widget.pet == null
         ? const AsyncData<String?>(null)
         : ref.watch(petPhotoPathProvider(widget.pet!.id));
@@ -154,7 +155,18 @@ class _PetFormScreenState extends ConsumerState<PetFormScreen> {
                       prefixIcon: Icon(Icons.pets_outlined),
                       border: OutlineInputBorder(),
                     ),
-                    validator: InputValidators.petName,
+                    validator: (value) {
+                      final error = InputValidators.petName(value);
+                      if (error != null) return error;
+                      final key = InputValidators.petNameKey(value!);
+                      return pets.any(
+                            (pet) =>
+                                pet.id != widget.pet?.id &&
+                                InputValidators.petNameKey(pet.name) == key,
+                          )
+                          ? 'Ya existe una mascota con ese nombre en este espacio.'
+                          : null;
+                    },
                     autovalidateMode: AutovalidateMode.onUserInteraction,
                   ),
                   const SizedBox(height: 16),
